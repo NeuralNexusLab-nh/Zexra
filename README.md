@@ -14,7 +14,7 @@ Open https://neuralnexuslab-nh.github.io/Zexra/ and select **PLAY**. Arena, diff
 
 **Arena selection:** Drydock, Nightshift, Overpass, Substation and Quarry are available in every arena mode, including Shooting Range. Only Dead Signal locks its map to The Hollow. The three added arenas use different obstacle layouts and routes, not just lighting changes.
 
-Regular bots react after 1.45 seconds of continuous sight, fire short three-shot bursts with breathing room, deal reduced damage and aim for the torso with wider error. Recruit is easier; Elite retains a faster response.
+Regular bots react after 1.15 seconds of continuous sight, fire short three-shot bursts with breathing room, deal reduced damage and aim for the torso with wider error. Recruit is easier; Elite retains a faster response.
 
 All participants other than you are local AI. There is no online multiplayer or matchmaking service.
 

@@ -3,7 +3,7 @@ import {createWorld,findPath} from './world.js?asset=ecbaa073d463';
 import {createWeapon,createSoldier,createZombie} from './weapons.js?asset=13588971c4f2';
 import {SoundEngine} from './audio.js?asset=ff009325c2f0';
 import {createHorrorWorld} from './horror.js?asset=b35a56a72a3a';
-import {BOT_TUNING,MODE_NAMES,buildRoster,hostile,matchScores,safeSpawn,HordeDirector,teamMode,eliminationWinner} from './rules.js?asset=a280f1436e3b';
+import {BOT_TUNING,MODE_NAMES,buildRoster,hostile,matchScores,safeSpawn,HordeDirector,teamMode,eliminationWinner} from './rules.js?asset=9cff2acaf78f';
 import {MouseLookTracker} from './input.js?asset=5b4f78a00b61';
 import {reloadPose} from './handling.js?asset=b48ea96c3072';
 const T=window.THREE,$=id=>document.getElementById(id),canvas=$('game');
