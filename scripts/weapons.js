@@ -5,6 +5,13 @@ const bevelBox=new T.ExtrudeGeometry(bevelShape,{depth:.93,bevelEnabled:true,bev
 const geometries={box:bevelBox,cyl:new T.CylinderGeometry(1,1,1,16),sphere:new T.SphereGeometry(1,12,8)};
 const limbGeometry=new T.CapsuleGeometry(.5,1,3,8);
 const clearOptic=new T.MeshBasicMaterial({color:0xa4e7ff,transparent:true,opacity:.055,depthWrite:false,side:T.DoubleSide});
+const woodMaterial=new T.MeshStandardMaterial({color:0x6d3c20,roughness:.66,metalness:0});
+const soldierMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.86,metalness:.08});
+function mergeSoldierParts(group,exclude){
+ const positions=[],normals=[],colors=[];
+ for(const mesh of [...group.children]){if(!mesh.isMesh||mesh===exclude)continue;mesh.updateMatrix();let geo=mesh.geometry.clone().applyMatrix4(mesh.matrix);if(geo.index){const indexed=geo;geo=geo.toNonIndexed();indexed.dispose();}const p=geo.attributes.position,n=geo.attributes.normal,c=mesh.material.color;for(let i=0;i<p.count;i++){positions.push(p.getX(i),p.getY(i),p.getZ(i));normals.push(n.getX(i),n.getY(i),n.getZ(i));colors.push(c.r,c.g,c.b);}geo.dispose();group.remove(mesh);}
+ const merged=new T.BufferGeometry();merged.setAttribute('position',new T.Float32BufferAttribute(positions,3));merged.setAttribute('normal',new T.Float32BufferAttribute(normals,3));merged.setAttribute('color',new T.Float32BufferAttribute(colors,3));const mesh=new T.Mesh(merged,soldierMaterial);mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);return merged;
+}
 export function createWeapon(id='carbine',hands=true){
  const root=new T.Group();root.userData.id=id;
  const part=(geo,m,x,y,z,w,h,d,parent=root)=>{const mesh=new T.Mesh(geo,m);mesh.position.set(x,y,z);mesh.scale.set(w,h,d);parent.add(mesh);return mesh;};
@@ -25,27 +32,35 @@ export function createWeapon(id='carbine',hands=true){
   for(const x of [-.061,.061])for(let z=-.025;z<.07;z+=.015)box(M.dark,x,.06,z,.003,.065,.005,bolt);
   muzzle=-.32;sightY=.13;
  }else{
-  const smg=id==='smg',sniper=id==='marksman',shotgun=id==='shotgun';muzzle=sniper?-1.48:shotgun?-1.32:smg?-.87:-1.18;
+  const smg=id==='mp5',sniper=id==='awp',shotgun=id==='shotgun',ak=id==='ak47',garand=id==='garand',furniture=ak||garand?woodMaterial:sniper?M.polymer:M.tan;muzzle=sniper?-1.48:garand?-1.4:shotgun?-1.32:smg?-.87:-1.18;
   box(M.metal,0,.012,-.18,.125,.17,.47);box(M.polymer,0,-.07,-.1,.12,.07,.4);box(M.dark,0,.108,-.27,.115,.025,.6);
   // Buffer tube, cheek rest, buttpad, angled pistol grip.
-  cyl(M.metal,0,.005,.24,.035,.34);box(smg?M.polymer:M.tan,0,.028,.34,.12,.105,.28);box(smg?M.polymer:M.tan,0,-.085,.40,.10,.045,.15);box(M.rubber,0,-.02,.49,.135,.23,.04);
-  const grip=box(M.polymer,0,-.19,.008,.095,.22,.11);grip.rotation.x=-.28;
+  cyl(M.metal,0,.005,.24,.035,.34);box(smg?M.polymer:furniture,0,.028,.34,.12,.105,.28);box(smg?M.polymer:furniture,0,-.085,.40,.10,.045,.15);box(M.rubber,0,-.02,.49,.135,.23,.04);
+  if(ak||garand)box(furniture,0,-.065,.26,.13,.12,.36);
+  const grip=box(ak?woodMaterial:M.polymer,0,-.19,.008,.095,.22,.11);grip.rotation.x=-.28;if(garand){grip.visible=false;box(woodMaterial,0,-.09,-.08,.14,.10,.65);}
   box(M.metal,0,-.16,-.13,.08,.018,.15);box(M.metal,0,-.11,-.205,.025,.12,.02);
   // Magazine, chamber and bolt cover are independently animated.
   const magZ=smg?-.26:-.22;const magazine=box(M.dark,0,-.22,magZ,smg?.065:.095,smg?.32:.27,.14,mag);magazine.rotation.x=smg?-.08:.16;
+  if(ak){magazine.scale.y=.17;magazine.position.y=-.17;for(let i=0;i<4;i++){const seg=box(M.dark,0,-.23-i*.045,magZ+.02+i*.024,.095,.06,.15,mag);seg.rotation.x=.18+i*.1;}}
   for(let i=0;i<3;i++)box(M.polymer,0,-.15-i*.065,magZ+.068,.1,.015,.008,mag);
   box(M.steel,.065,.025,-.12,.006,.065,.14,bolt);box(M.dark,.075,.017,-.07,.018,.04,.035,bolt);box(M.metal,-.075,.025,-.06,.02,.027,.045);
   // Free-float handguard, Picatinny rails, barrel and slotted muzzle brake.
-  const fore=smg?.25:sniper?.53:.42,foreCenter=-.41-fore*.5;
-  box(smg?M.polymer:M.tan,0,.005,foreCenter,.12,.14,fore);cyl(M.metal,0,.013,(muzzle-.4)*.5,.026,Math.abs(muzzle+.4));
+  const fore=smg?.25:sniper?.53:garand?.63:.42,foreCenter=-.41-fore*.5;
+  box(smg?M.polymer:furniture,0,.005,foreCenter,.12,.14,fore);cyl(M.metal,0,.013,(muzzle-.4)*.5,.026,Math.abs(muzzle+.4));
   for(let z=-.42;z>foreCenter-fore/2;z-=.047){box(M.dark,.062,.02,z,.006,.045,.022);box(M.dark,-.062,.02,z,.006,.045,.022);}
-  for(let z=.01;z>foreCenter-fore/2;z-=.04)box(M.metal,0,.125,z,.13,.015,.014);
+  if(!ak&&!garand)for(let z=.01;z>foreCenter-fore/2;z-=.04)box(M.metal,0,.125,z,.13,.015,.014);
+  if(smg){cyl(M.dark,0,.02,-.27,.064,.45);box(M.metal,-.09,.08,-.40,.05,.025,.03);}
+  if(garand){mag.visible=false;box(M.dark,0,.10,-.21,.06,.025,.16,bolt);}
   cyl(M.metal,0,.013,muzzle+.045,.039,.10);cyl(M.dark,0,.013,muzzle-.007,.023,.008);for(const x of [-.04,.04])box(M.dark,x,.014,muzzle+.035,.004,.035,.05);
   if(shotgun){cyl(M.dark,0,-.065,-.78,.031,.78);for(let z=-.6;z>-.92;z-=.03)box(M.rubber,0,-.055,z,.15,.12,.015);for(let z=.05;z>-.18;z-=.055)cyl(M.brass,.083,.01,z,.018,.045);}
   // Optics: an open red-dot sight for carbines, tubular scope for marksman.
   if(sniper){
    for(const z of [-.25,-.55]){box(M.dark,0,.18,z,.1,.1,.08);cyl(M.dark,0,.24,z,.066,.04);}
    cyl(M.metal,0,.25,-.41,.055,.46);cyl(M.dark,0,.25,-.68,.086,.12);cyl(M.glass,0,.25,-.745,.071,.006);cyl(M.dark,0,.25,-.145,.071,.10);cyl(M.glass,0,.25,-.09,.058,.006);box(M.dark,.075,.25,-.38,.06,.08,.07);box(M.dark,0,.32,-.38,.07,.045,.07);sightY=.25;
+  }else if(ak||garand){
+   box(M.dark,-.029,.156,-.10,.018,.025,.027);box(M.dark,.029,.156,-.10,.018,.025,.027);box(M.dark,0,.13,-.10,.07,.015,.027);
+   box(M.dark,0,.145,muzzle+.18,.012,.055,.025);box(M.steel,0,.173,muzzle+.18,.009,.008,.012);sightY=.173;
+   const frontRing=new T.Mesh(new T.TorusGeometry(.036,.006,6,14),M.dark);frontRing.position.set(0,.159,muzzle+.19);root.add(frontRing);root.userData.ringGeometry=frontRing.geometry;
   }else{
    box(M.dark,0,.15,-.24,.1,.05,.16);const ring=new T.Mesh(new T.TorusGeometry(.058,.011,6,18),M.dark);ring.position.set(0,.218,-.25);root.add(ring);root.userData.ringGeometry=ring.geometry;
    const glass=part(geometries.cyl,clearOptic,0,.218,-.25,.049,.003,.049);glass.rotation.x=Math.PI/2;
@@ -83,5 +98,6 @@ export function createSoldier(index=0){
  for(const x of [-.14,0,.14])limb(x,1.14,-.24,.10,.14,.06,materials.tan);
  const patch=limb(-.255,1.33,-.01,.015,.11,.13,materials.tan);
  const flash=new T.Mesh(new T.SphereGeometry(.12,6,4),new T.MeshBasicMaterial({color:0xffd477}));flash.position.set(0,1.26,-1.03);flash.scale.z=2;flash.visible=false;group.add(flash);
- return{group,limbs,head,flash,dispose(){cloth.dispose();head.geometry.dispose();flash.geometry.dispose();flash.material.dispose();}};
+ const mergedGeometry=mergeSoldierParts(group,flash);
+ return{group,limbs,head,flash,dispose(){cloth.dispose();head.geometry.dispose();flash.geometry.dispose();flash.material.dispose();mergedGeometry.dispose();}};
 }

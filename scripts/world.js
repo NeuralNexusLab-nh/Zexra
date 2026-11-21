@@ -1,4 +1,4 @@
-import {visible} from './physics.js?asset=619daff5b62f';
+import {visible} from './physics.js?asset=e07dc08633f9';
 const T=window.THREE;
 let seed=517;
 const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};

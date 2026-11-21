@@ -1,11 +1,11 @@
-import {clamp,damp,makeBody,moveBody,accelerate,canStand,wallDistance,visible,rayBox,raySphere,damageAt,lookVector,movementVector,WEAPONS} from './physics.js?asset=619daff5b62f';
-import {createWorld,findPath} from './world.js?asset=3405ee404ba2';
-import {createWeapon,createSoldier} from './weapons.js?asset=38d0ac08eaa9';
-import {SoundEngine} from './audio.js?asset=4ac14198dc7a';
+import {clamp,damp,makeBody,moveBody,accelerate,canStand,wallDistance,visible,rayBox,raySphere,damageAt,lookVector,movementVector,PRIMARY_COUNT,SIDEARM_INDEX,WEAPONS} from './physics.js?asset=e07dc08633f9';
+import {createWorld,findPath} from './world.js?asset=4985951fc3c7';
+import {createWeapon,createSoldier} from './weapons.js?asset=a54a730a1205';
+import {SoundEngine} from './audio.js?asset=6413df84f0d5';
 const T=window.THREE,$=id=>document.getElementById(id),canvas=$('game');
 const defaults={sens:1,adsSens:.65,touchSens:.9,invertY:false,fov:90,volume:65,quality:'medium',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,numbers:true,showFps:true,primary:0};
 let settings={...defaults};try{const s=JSON.parse(localStorage.getItem('zexra.settings.v1'));for(const k of Object.keys(defaults))if(typeof s?.[k]===typeof defaults[k])settings[k]=s[k];}catch{}
-settings.sens=clamp(settings.sens,.3,3);settings.fov=clamp(settings.fov,70,110);settings.volume=clamp(settings.volume,0,100);settings.primary=clamp(Math.floor(settings.primary),0,3);if(!['low','medium','high'].includes(settings.quality))settings.quality='high';
+settings.sens=clamp(settings.sens,.3,3);settings.fov=clamp(settings.fov,70,110);settings.volume=clamp(settings.volume,0,100);settings.primary=clamp(Math.floor(settings.primary),0,PRIMARY_COUNT-1);if(!['low','medium','high'].includes(settings.quality))settings.quality='high';
 const touch=matchMedia('(pointer:coarse)').matches;document.body.classList.toggle('touch',touch);
 let renderer,world,camera,viewCamera,viewScene,gun,initialized=false;
 const sound=new SoundEngine();
@@ -37,14 +37,14 @@ function loadWorld(theme){
 }
 function applyQuality(){if(!renderer)return;const q=settings.quality;renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.3:q==='medium'?1:.75));renderer.shadowMap.enabled=q!=='low';world.sun.shadow.mapSize.set(q==='high'?2048:1024,q==='high'?2048:1024);world.sun.shadow.map?.dispose();world.sun.shadow.map=null;world.sun.shadow.needsUpdate=true;resize();}
 function resize(){if(!renderer)return;renderer.setSize(innerWidth,innerHeight,false);camera.aspect=viewCamera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();viewCamera.updateProjectionMatrix();}
-function gunConfig(){return selectedSlot===2?{id:'knife',name:'TACTICAL KNIFE',damage:65,interval:.55,reload:0,mag:0,spread:0,recoil:0,range:2.4,pellets:1,zoom:settings.fov}:WEAPONS[selectedSlot===0?primary:4];}
+function gunConfig(){return selectedSlot===2?{id:'knife',name:'TACTICAL KNIFE',damage:65,interval:.55,reload:0,mag:0,spread:0,recoil:0,range:2.4,pellets:1,zoom:settings.fov}:WEAPONS[selectedSlot===0?primary:SIDEARM_INDEX];}
 function equip(slot,force=false){
  if(selectedSlot===slot&&gun&&!force)return;
  selectedSlot=slot;pendingSlot=null;holster=0;reload=0;inspect=0;ads=0;aimPressed=false;touchAim=false;weaponSwap=.22;lastFire=false;
  if(gun){viewScene.remove(gun);gun.userData.dispose();}gun=createWeapon(gunConfig().id);viewScene.add(gun);updateHUD();
 }
 function requestEquip(slot){if(slot===selectedSlot||pendingSlot!==null||throwAnim>0)return;reload=0;inspect=0;pendingSlot=slot;holster=.15;weaponSwap=.38;}
-function freshInventory(){inventory=[WEAPONS[primary],WEAPONS[4]].map(w=>({ammo:w.mag,reserve:w.reserve}));}
+function freshInventory(){inventory=[WEAPONS[primary],WEAPONS[SIDEARM_INDEX]].map(w=>({ammo:w.mag,reserve:w.reserve}));}
 function initUI(){
  $('modeGrid').querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{mode=button.dataset.mode;$('modeGrid').querySelectorAll('button').forEach(b=>{const on=b===button;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});$('difficulty').disabled=mode==='range';});
  $('mapSelect').onchange=()=>{map=$('mapSelect').value;loadWorld(map);applyQuality();};$('difficulty').onchange=()=>difficulty=$('difficulty').value;
@@ -63,7 +63,7 @@ function initUI(){
 }
 function updateSettingsUI(){$('sensValue').textContent=settings.sens.toFixed(2);$('adsSensValue').textContent=settings.adsSens.toFixed(2)+'×';$('touchSensValue').textContent=settings.touchSens.toFixed(2);$('fovValue').textContent=settings.fov+'°';$('volumeValue').textContent=settings.volume+'%';$('fps').hidden=!settings.showFps;}
 function renderArmory(){
- $('weaponGrid').replaceChildren();WEAPONS.slice(0,4).forEach((w,i)=>{const b=document.createElement('button');b.className='weapon-card'+(i===primary?' selected':'');b.setAttribute('aria-pressed',String(i===primary));b.innerHTML=`<strong>${w.name}</strong><small>${w.caliber} · ${w.type}</small><p>${['Balanced firepower and control for sustained mid-range fights.','Lightweight and fast. Built for close-range pressure.','Heavy semi-automatic fire. Steady your aim and pick your moment.','Devastating up close. Use cover to close the distance.'][i]}</p><div class="stat">POWER<i><b style="width:${w.damage/70*100}%"></b></i></div><div class="stat">FIRE RATE<i><b style="width:${.06/w.interval*100}%"></b></i></div><div class="stat">RANGE<i><b style="width:${w.range/65*100}%"></b></i></div>`;b.onclick=()=>{primary=i;settings.primary=i;saveSettings();equip(0,true);renderArmory();};$('weaponGrid').append(b);});
+ $('weaponGrid').replaceChildren();WEAPONS.slice(0,PRIMARY_COUNT).forEach((w,i)=>{const b=document.createElement('button');b.className='weapon-card'+(i===primary?' selected':'');b.setAttribute('aria-pressed',String(i===primary));b.innerHTML=`<strong>${w.name}</strong><small>${w.caliber} · ${w.type}</small><p>${['Hard-hitting 7.62 firepower. Wood furniture, curved magazine and iron sights.','A fictional modern carbine. Fast follow-up shots and a clear reflex optic.','Compact 9 mm control. Fast handling and manageable recoil up close.','Bolt-action precision. A clear magnified optic and powerful single shots.','Eight-round en-bloc clip. Deliberate semi-automatic fire and classic iron sights.'][i]}</p><div class="stat">POWER<i><b style="width:${w.damage/70*100}%"></b></i></div><div class="stat">FIRE RATE<i><b style="width:${.06/w.interval*100}%"></b></i></div><div class="stat">RANGE<i><b style="width:${w.range/65*100}%"></b></i></div>`;b.onclick=()=>{primary=i;settings.primary=i;saveSettings();equip(0,true);renderArmory();};$('weaponGrid').append(b);});
  $('previewName').textContent=WEAPONS[primary].name;$('previewType').textContent=WEAPONS[primary].caliber+' / '+WEAPONS[primary].type;
 }
 function openDialog(id){$(id).showModal();}function openSettings(){openDialog('settingsDialog');}
@@ -107,7 +107,7 @@ function shoot(){
  if(selectedSlot!==2&&inv.ammo<=0){requestReload();return;}
  nextFire=clock+w.interval;inspect=0;player.invulnerable=0;
  if(selectedSlot===2){sound.knife();gunKick=.15;let best=null,dist=2.4;for(const b of bots){if(!b.alive)continue;const dx=b.x-player.x,dz=b.z-player.z,l=Math.hypot(dx,dz),dot=(-Math.sin(yaw)*dx-Math.cos(yaw)*dz)/Math.max(l,.01);if(l<dist&&dot>.55&&visible(eye(),{x:b.x,y:b.y+1.2,z:b.z},world.boxes)){best=b;dist=l;}}if(best){applyDamage(best,w.damage,player,false,'TACTICAL KNIFE');sound.hit();hitTime=.15;}return;}
- inv.ammo--;player.shots++;gunKick=1;gun.userData.flash.visible=true;gun.userData.light.intensity=2;sound.shot(w.id);
+ inv.ammo--;player.shots++;gunKick=1;gun.userData.flash.visible=true;gun.userData.light.intensity=2;sound.shot(w.id);if(w.id==='garand'&&inv.ammo===0)sound.ping();
  for(const b of bots)if(b.alive&&Math.hypot(b.x-player.x,b.z-player.z)<32){b.lastKnown={x:player.x,z:player.z};b.memory=4;b.pathTime=0;}
  const o=eye(),speed=Math.hypot(player.vx,player.vz),spread=w.spread*(ads>.8?.12:1)*(player.grounded?1:2.5)*(speed>4?1.7:1)*(player.height<1.5?.7:1);let hitAny=false;
  const damages=new Map();
@@ -277,7 +277,7 @@ function updateView(dt){
   menuTime+=dt;camera.position.set(-16+Math.sin(menuTime*.07)*1.5,5.3,20);camera.lookAt(3,2,-6);
   viewCamera.fov=52;viewCamera.updateProjectionMatrix();gun.position.set(.38,-.02,-1.6);gun.rotation.set(.08+Math.sin(menuTime*.5)*.015,-1.05,-.08);gun.scale.setScalar(.85);gun.visible=innerWidth>600;gun.userData.flash.visible=false;gun.userData.light.intensity=0;return;
  }
- const scoped=w.id==='marksman'&&ads>.84;gun.visible=player.alive&&!scoped;$('scope').hidden=!scoped;gun.scale.setScalar(1);viewCamera.fov=65;viewCamera.updateProjectionMatrix();
+ const scoped=w.id==='awp'&&ads>.84;gun.visible=player.alive&&!scoped;$('scope').hidden=!scoped;gun.scale.setScalar(1);viewCamera.fov=65;viewCamera.updateProjectionMatrix();
  camera.position.set(player.x,player.y+eyeHeight,player.z);camera.rotation.set(pitch+recoil,yaw+recoilYaw,0,'YXZ');
  const moving=Math.min(Math.hypot(player.vx,player.vz)/6,1),motion=settings.motion?1:0,wave=Math.sin(bob*7),sway=clamp(lookX*.0005,-.035,.035)*motion;
  const aimX=0,aimY=-gun.userData.sightY,aimZ=w.id==='pistol'?-.48:-.68;
@@ -286,13 +286,13 @@ function updateView(dt){
  gun.rotation.set(gunKick*.07,0,Math.sin(bob*3.5)*.012*moving*(1-ads)*motion);
  if(player.slide>0){gun.rotation.z-=.12*(1-ads)*motion;gun.position.y-=.04;}
  const support=gun.userData.supportArm;if(support){support.position.set(0,0,0);support.rotation.set(0,0,0);}
- if(reload>0){const progress=1-reload/w.reload,curve=Math.sin(progress*Math.PI),work=T.MathUtils.smoothstep(progress,.06,.25)*(1-T.MathUtils.smoothstep(progress,.76,.97)),drop=T.MathUtils.smoothstep(progress,.16,.34)*(1-T.MathUtils.smoothstep(progress,.53,.76));gun.rotation.z=-.4*work;gun.rotation.x=.2*work;gun.position.y-=work*.07;gun.userData.mag.position.y=-drop*.33;gun.userData.mag.position.z=drop*.07;gun.userData.mag.rotation.x=-.16*drop;if(support){support.position.set(-.02*work,-.06*work-drop*.1,.34*work);support.rotation.x=.28*work;}}else{gun.userData.mag.position.set(0,0,0);gun.userData.mag.rotation.x=0;}
+ if(reload>0){const progress=1-reload/w.reload,curve=Math.sin(progress*Math.PI),work=T.MathUtils.smoothstep(progress,.06,.25)*(1-T.MathUtils.smoothstep(progress,.76,.97)),drop=T.MathUtils.smoothstep(progress,.16,.34)*(1-T.MathUtils.smoothstep(progress,.53,.76));gun.rotation.z=-.4*work;gun.rotation.x=.2*work;gun.position.y-=work*.07;gun.userData.mag.position.y=w.id==='garand'?0:-drop*.33;gun.userData.mag.position.z=drop*.07;gun.userData.mag.rotation.x=-.16*drop;if(support){support.position.set(-.02*work,w.id==='garand'?.16*work:-.06*work-drop*.1,.34*work);support.rotation.x=.28*work;}}else{gun.userData.mag.position.set(0,0,0);gun.userData.mag.rotation.x=0;}
  sprintPose=damp(sprintPose,moving>.9&&Math.hypot(player.vx,player.vz)>6&&!firePressed&&ads<.1&&reload<=0?1:0,10,dt);gun.rotation.x+=sprintPose*.18;gun.rotation.z-=sprintPose*.18;gun.position.y-=sprintPose*.07;
  if(throwAnim>0){const curve=Math.sin((.65-throwAnim)/.65*Math.PI);gun.rotation.x+=curve*.45;gun.rotation.z-=curve*.25;gun.position.y-=curve*.28;if(support){support.rotation.x-=curve*1.3;support.position.z-=curve*.12;}}
  if(inspect>0){const curve=Math.sin(inspect/1.8*Math.PI);gun.rotation.y=.9*curve;gun.rotation.z=.25*curve;gun.position.x-=.13*curve;}
  if(selectedSlot===2&&gunKick>.01){gun.rotation.z=-gunKick*1.4;gun.rotation.y=gunKick*.8;gun.position.x-=gunKick*.3;}
  if(weaponSwap>0){const amount=pendingSlot!==null?(.15-holster)*3:weaponSwap*2;gun.position.y-=amount;gun.rotation.x+=amount*.5;}
- gun.userData.bolt.position.z=gunKick*.04;gun.userData.flash.visible=gunKick>.6&&selectedSlot!==2;gun.userData.flash.rotation.z=Math.random()*Math.PI;gun.userData.light.intensity=gunKick>.6?1.5:0;
+ gun.userData.bolt.position.z=gunKick*.04;if(w.id==='awp'&&clock<nextFire){const cycle=1-(nextFire-clock)/w.interval;gun.userData.bolt.position.z+=Math.sin(T.MathUtils.smoothstep(cycle,.18,.8)*Math.PI)*.12;}gun.userData.flash.visible=gunKick>.6&&selectedSlot!==2;gun.userData.flash.rotation.z=Math.random()*Math.PI;gun.userData.light.intensity=gunKick>.6?1.5:0;
  if(settings.motion&&ads<.5&&player.grounded)camera.position.y+=Math.sin(bob*7)*.012*moving;
  sound.update(camera.position,yaw,pitch);
  $('crosshair').classList.toggle('aim',ads>.7);$('crosshair').style.opacity=player.alive&&!scoped&&(selectedSlot===2||ads<.9)?'1':'0';$('crosshair').style.setProperty('--gap',(5+moving*7+gunKick*12)*(1-ads*.65)+'px');

@@ -45,9 +45,11 @@ export function moveBody(p,dt,boxes,step=.3){
 export function accelerate(p,dx,dz,speed,dt,air=false){const len=Math.hypot(dx,dz);if(len>1){dx/=len;dz/=len;}const k=air?3.3:17;p.vx=damp(p.vx,dx*speed,k,dt);p.vz=damp(p.vz,dz*speed,k,dt);}
 export function damageAt(base,distance,range,head=false){return Math.round(base*(head?2:1)*Math.max(.45,1-Math.max(0,distance-range)/(range*3)));}
 export const WEAPONS=[
- {id:'carbine',name:'XR-416',type:'ASSAULT RIFLE',caliber:'5.56 × 45',mag:30,reserve:180,damage:27,interval:.092,reload:2.15,spread:.012,recoil:.014,range:30,auto:true,pellets:1,zoom:58},
- {id:'smg',name:'VX-9',type:'SUBMACHINE GUN',caliber:'9 × 19',mag:32,reserve:192,damage:21,interval:.064,reload:1.75,spread:.016,recoil:.010,range:16,auto:true,pellets:1,zoom:64},
- {id:'marksman',name:'MR-308',type:'MARKSMAN RIFLE',caliber:'7.62 × 51',mag:10,reserve:60,damage:68,interval:.68,reload:2.65,spread:.021,recoil:.038,range:65,auto:false,pellets:1,zoom:30},
- {id:'shotgun',name:'SG-12',type:'SHOTGUN',caliber:'12 GA',mag:6,reserve:36,damage:15,interval:.82,reload:2.6,spread:.048,recoil:.042,range:9,auto:false,pellets:9,zoom:68},
+ {id:'ak47',name:'AK-47',type:'ASSAULT RIFLE',caliber:'7.62 × 39',mag:30,reserve:180,damage:33,interval:.10,reload:2.35,spread:.014,recoil:.021,range:30,auto:true,pellets:1,zoom:60},
+ {id:'vcr2',name:'VCR2',type:'ASSAULT RIFLE',caliber:'5.56 × 45',mag:30,reserve:180,damage:27,interval:.08,reload:2.1,spread:.011,recoil:.013,range:35,auto:true,pellets:1,zoom:58},
+ {id:'mp5',name:'MP5',type:'SUBMACHINE GUN',caliber:'9 × 19',mag:30,reserve:180,damage:22,interval:.075,reload:1.85,spread:.015,recoil:.009,range:16,auto:true,pellets:1,zoom:64},
+ {id:'awp',name:'AWP',type:'BOLT-ACTION RIFLE',caliber:'7.62 × 51',mag:10,reserve:50,damage:100,interval:1.35,reload:2.9,spread:.023,recoil:.045,range:70,auto:false,pellets:1,zoom:25},
+ {id:'garand',name:'M1 Garand',type:'SEMI-AUTOMATIC RIFLE',caliber:'.30-06 SPRINGFIELD',mag:8,reserve:64,damage:52,interval:.28,reload:2.4,spread:.015,recoil:.028,range:50,auto:false,pellets:1,zoom:50},
  {id:'pistol',name:'P-19',type:'SIDEARM',caliber:'9 × 19',mag:17,reserve:85,damage:30,interval:.20,reload:1.45,spread:.016,recoil:.023,range:18,auto:false,pellets:1,zoom:64}
 ];
+export const PRIMARY_COUNT=5,SIDEARM_INDEX=5;

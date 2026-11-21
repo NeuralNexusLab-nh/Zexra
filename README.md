@@ -44,7 +44,7 @@ Touch devices get a movement stick, right-side camera drag and action buttons. F
 
 ## Presentation and performance
 
-- Five procedural firearm models: XR-416, VX-9, MR-308, SG-12 and P-19; tactical knife and grenades.
+- Six procedural firearm models: AK-47, VCR2, MP5, AWP, M1 Garand and P-19; tactical knife and grenades. VCR2 is fictional; the other names identify game interpretations rather than manufacturer-approved simulations.
 - ADS, recoil, stance-dependent dispersion, range falloff, headshots, moving magazines/bolts, muzzle flashes, shells and tracer feedback.
 - Procedural concrete, asphalt and steel textures; instanced static geometry, shadow maps, sky gradient, environment reflections and night lighting.
 - Locally synthesized Web Audio effects: distinct weapon reports, mechanical reload sounds, footsteps, grenade blasts, stereo positional sound, cover filtering and short convolution reverberation. These are procedural effects, not field-recorded firearm samples.
