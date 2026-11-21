@@ -1,4 +1,4 @@
-import {visible} from './physics.js?asset=300d47b839c0';
+import {visible} from './physics.js?asset=a3c90f79fe02';
 const T=window.THREE;
 export function createHorrorWorld(renderer){
  const scene=new T.Scene(),boxes=[],resources=[],batch=new Map();scene.background=new T.Color('#090b19');scene.fog=new T.FogExp2('#222035',.032);

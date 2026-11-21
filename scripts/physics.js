@@ -55,3 +55,15 @@ export const WEAPONS=[
  {id:'pistol',name:'P-19',type:'SIDEARM',caliber:'9 × 19',mag:17,reserve:85,damage:30,interval:.20,reload:1.45,spread:.016,recoil:.023,range:18,auto:false,pellets:1,zoom:64}
 ];
 export const PRIMARY_COUNT=7,SIDEARM_INDEX=7;
+// Presentation order preserves the stable inventory indexes used by saved loadouts.
+export const WEAPON_CATEGORIES=[
+ {name:'ASSAULT RIFLES',ids:['ak47','vcr2']},
+ {name:'SUBMACHINE GUNS & PDWS',ids:['mp5','p90']},
+ {name:'BATTLE RIFLES',ids:['garand']},
+ {name:'SNIPER & ANTI-MATERIEL RIFLES',ids:['awp','barrett']}
+];
+export function armoryGroups(){return WEAPON_CATEGORIES.map(group=>({name:group.name,weapons:group.ids.map(id=>{const index=WEAPONS.findIndex(w=>w.id===id);return{weapon:WEAPONS[index],index};})}));}
+export function weaponStats(w){
+ const primaries=WEAPONS.slice(0,PRIMARY_COUNT),percent=(value,max)=>clamp(value/max*100,0,100);
+ return{power:percent(w.damage,Math.max(...primaries.map(g=>g.damage))),fireRate:percent(1/w.interval,Math.max(...primaries.map(g=>1/g.interval))),range:percent(w.range,Math.max(...primaries.map(g=>g.range)))};
+}

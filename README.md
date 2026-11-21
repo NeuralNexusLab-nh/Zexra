@@ -4,17 +4,17 @@ A fully static browser arena shooter by NXLabTW. English interface, technology-p
 
 ## Play
 
-Open https://neuralnexuslab-nh.github.io/Zexra/ and select **PLAY**. Choose an independent elimination mode (1v1 to 5v5), Team Deathmatch, Free for All or a special operation, then deploy.
+Open https://neuralnexuslab-nh.github.io/Zexra/ and select **PLAY**. Arena, difficulty and deploy controls stay pinned at the top while the mode list scrolls. Choose an independent elimination mode (1v1 to 5v5), Team Deathmatch, Free for All or a special operation, then deploy.
 
 - **1v1, 2v2, 3v3, 4v4, 5v5:** independent round-elimination modes. One life per round, no mid-round respawns, first team to five rounds. A round lasts up to 90 seconds; timeout compares surviving players, then remaining health. A tie replays without a point.
 - **Team Deathmatch:** separate 5v5 respawn mode. First team to 50 eliminations, or highest team score after five minutes. Friendly fire is disabled.
 - **Free for All:** separate ten-player respawn mode. First to 25 eliminations, or highest score after five minutes.
-- **Dead Signal:** solo zombie survival in **The Hollow**, a separate abandoned cemetery with memorial ruins, fog, moonlight and violet security lights. Waves progressively increase in number, health and movement speed. Infected pursue through cover and attack at melee range after a dodgeable wind-up. Survive an entire wave to restore reserve ammunition, recover health and gain a grenade before the next wave. Death ends the run. Active infected are capped at 18 to bound rendering and navigation costs.
+- **Dead Signal:** solo zombie survival in **The Hollow**, a separate abandoned cemetery with memorial ruins, fog, moonlight and violet security lights. Recruit, Regular and Elite affect wave population, health, speed, melee damage and attack timing. Waves progressively increase in number, health and movement speed. Infected pursue through cover and attack at melee range after a dodgeable wind-up. Survive an entire wave to restore reserve ammunition, recover health and gain a grenade before the next wave. Death ends the run. Active infected are capped at 18 to bound rendering and navigation costs.
 - **Shooting Range:** six moving targets, unlimited reserve ammunition and grenade replenishment.
 
 **Arena selection:** Drydock, Nightshift, Overpass, Substation and Quarry are available in every arena mode, including Shooting Range. Only Dead Signal locks its map to The Hollow. The three added arenas use different obstacle layouts and routes, not just lighting changes.
 
-Regular bots react after 1.3 seconds of continuous sight, fire short three-shot bursts with breathing room, deal reduced damage and aim for the torso with wider error. Recruit is easier; Elite retains a faster response.
+Regular bots react after 1.45 seconds of continuous sight, fire short three-shot bursts with breathing room, deal reduced damage and aim for the torso with wider error. Recruit is easier; Elite retains a faster response.
 
 All participants other than you are local AI. There is no online multiplayer or matchmaking service.
 

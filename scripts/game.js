@@ -1,9 +1,9 @@
-import {clamp,damp,makeBody,moveBody,accelerate,canStand,wallDistance,visible,rayBox,raySphere,damageAt,lookVector,movementVector,PRIMARY_COUNT,SIDEARM_INDEX,WEAPONS} from './physics.js?asset=300d47b839c0';
-import {createWorld,findPath} from './world.js?asset=f61e107f920a';
-import {createWeapon,createSoldier,createZombie} from './weapons.js?asset=20315c479543';
+import {clamp,damp,makeBody,moveBody,accelerate,canStand,wallDistance,visible,rayBox,raySphere,damageAt,lookVector,movementVector,PRIMARY_COUNT,SIDEARM_INDEX,WEAPONS,armoryGroups,weaponStats} from './physics.js?asset=a3c90f79fe02';
+import {createWorld,findPath} from './world.js?asset=ecbaa073d463';
+import {createWeapon,createSoldier,createZombie} from './weapons.js?asset=13588971c4f2';
 import {SoundEngine} from './audio.js?asset=ff009325c2f0';
-import {createHorrorWorld} from './horror.js?asset=d9db9395f817';
-import {BOT_TUNING,MODE_NAMES,buildRoster,hostile,matchScores,safeSpawn,HordeDirector,teamMode,eliminationWinner} from './rules.js?asset=ac10a209c9fe';
+import {createHorrorWorld} from './horror.js?asset=b35a56a72a3a';
+import {BOT_TUNING,MODE_NAMES,buildRoster,hostile,matchScores,safeSpawn,HordeDirector,teamMode,eliminationWinner} from './rules.js?asset=a280f1436e3b';
 import {MouseLookTracker} from './input.js?asset=5b4f78a00b61';
 import {reloadPose} from './handling.js?asset=b48ea96c3072';
 const T=window.THREE,$=id=>document.getElementById(id),canvas=$('game');
@@ -72,7 +72,7 @@ function initUI(){
 }
 function updateSettingsUI(){$('sensValue').textContent=settings.sens.toFixed(2);$('adsSensValue').textContent=settings.adsSens.toFixed(2)+'×';$('touchSensValue').textContent=settings.touchSens.toFixed(2);$('fovValue').textContent=settings.fov+'°';$('volumeValue').textContent=settings.volume+'%';$('fps').hidden=!settings.showFps;}
 function renderArmory(){
- $('weaponGrid').replaceChildren();WEAPONS.slice(0,PRIMARY_COUNT).forEach((w,i)=>{const b=document.createElement('button');b.className='weapon-card'+(i===primary?' selected':'');b.setAttribute('aria-pressed',String(i===primary));b.innerHTML=`<strong>${w.name}</strong><small>${w.caliber} · ${w.type}</small><p>${['Hard-hitting 7.62 firepower. Wood furniture, curved magazine and rectangular red-dot optic.','BF6-inspired bullpup silhouette. Rear magazine and rectangular red-dot optic.','Compact 9 mm control. Fast handling and manageable recoil up close.','Bolt-action precision. A clear magnified optic and powerful single shots.','Eight-round en-bloc clip. Deliberate semi-automatic fire and a clear rectangular red-dot optic.','A compact bullpup with a 50-round horizontal magazine and smooth 5.7 mm fire.','Long-recoil .50 BMG semi-automatic rifle. Ten-round magazine, muzzle brake and magnified optic.'][i]}</p><div class="stat">POWER<i><b style="width:${Math.min(100,w.damage/110*100)}%"></b></i></div><div class="stat">FIRE RATE<i><b style="width:${.06/w.interval*100}%"></b></i></div><div class="stat">RANGE<i><b style="width:${w.range/65*100}%"></b></i></div>`;b.onclick=()=>{primary=i;settings.primary=i;saveSettings();equip(0,true);renderArmory();};$('weaponGrid').append(b);});
+ $('weaponGrid').replaceChildren();for(const group of armoryGroups()){const heading=document.createElement('h3');heading.className='weapon-category';heading.textContent=group.name;$('weaponGrid').append(heading);group.weapons.forEach(({weapon:w,index:i})=>{const stats=weaponStats(w);const b=document.createElement('button');b.className='weapon-card'+(i===primary?' selected':'');b.setAttribute('aria-pressed',String(i===primary));b.innerHTML=`<strong>${w.name}</strong><small>${w.caliber} · ${w.type}</small><p>${['Hard-hitting 7.62 firepower. Wood furniture, curved magazine and rectangular red-dot optic.','BF6-inspired bullpup silhouette. Rear magazine and rectangular red-dot optic.','Compact 9 mm control. Fast handling and manageable recoil up close.','Bolt-action precision. A clear magnified optic and powerful single shots.','Eight-round en-bloc clip. Deliberate semi-automatic fire and a clear rectangular red-dot optic.','A compact bullpup with a 50-round horizontal magazine and smooth 5.7 mm fire.','Long-recoil .50 BMG semi-automatic rifle. Ten-round magazine, muzzle brake and magnified optic.'][i]}</p><div class="stat">POWER<i><b style="width:${stats.power}%"></b></i></div><div class="stat">FIRE RATE<i><b style="width:${stats.fireRate}%"></b></i></div><div class="stat">RANGE<i><b style="width:${stats.range}%"></b></i></div>`;b.onclick=()=>{primary=i;settings.primary=i;saveSettings();equip(0,true);renderArmory();};$('weaponGrid').append(b);});}
  $('previewName').textContent=WEAPONS[primary].name;$('previewType').textContent=WEAPONS[primary].caliber+' / '+WEAPONS[primary].type;
 }
 function openDialog(id){$(id).showModal();}function openSettings(){openDialog('settingsDialog');}
@@ -88,7 +88,7 @@ function selectMode(next){const select=$('mapSelect');if(mode!=='zombies'&&selec
 function syncPlayUI(){
  document.querySelectorAll('[data-mode]').forEach(b=>{const on=b.dataset.mode===mode;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
  $('sizeGrid').querySelectorAll('button').forEach(b=>{const on=mode==='elimination'&&Number(b.dataset.size)===teamSize;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
- $('sizeSection').hidden=false;$('difficulty').disabled=mode==='range'||mode==='zombies';$('mapSelect').disabled=mode==='zombies';
+ $('sizeSection').hidden=false;$('difficulty').disabled=mode==='range';$('mapSelect').disabled=mode==='zombies';
  $('sizeHint').textContent='ONE LIFE PER ROUND / FIRST TO 5 ROUNDS';
  $('operationBrief').textContent=mode==='zombies'?'DEAD SIGNAL / THE HOLLOW / SOLO WAVE SURVIVAL':mode==='range'?'SHOOTING RANGE / ANY ARENA / UNLIMITED RESERVES':mode==='elimination'?teamSize+'v'+teamSize+' ELIMINATION / ONE LIFE / FIRST TO 5 ROUNDS':mode==='tdm'?'TEAM DEATHMATCH / 5v5 / RESPAWN / FIRST TO 50':'FREE FOR ALL / 10 COMBATANTS / RESPAWN / FIRST TO 25';
 }
@@ -102,7 +102,7 @@ function addBot(config,index){
 async function startMatch(){
  closeDialogs();clearInput();state='running';document.body.classList.add('playing');map=mode==='zombies'?'horror':$('mapSelect').value;difficulty=$('difficulty').value;
  if(world.theme!==map){loadWorld(map);applyQuality();}else{clearEffects();clearActors();}
- Object.assign(player,{id:0,team:0,hp:100,kills:0,deaths:0,heads:0,shots:0,hits:0,alive:true,grenades:2});clock=0;aiAccumulator=0;time=mode==='elimination'?90:300;roundScores=[0,0];round=1;roundPause=respawn=throwAnim=0;nextFire=0;reload=0;recoil=recoilYaw=gunKick=0;wave=new HordeDirector();zombieSerial=0;freshInventory();equip(0,true);spawnPlayer(true);
+ Object.assign(player,{id:0,team:0,hp:100,kills:0,deaths:0,heads:0,shots:0,hits:0,alive:true,grenades:2});clock=0;aiAccumulator=0;time=mode==='elimination'?90:300;roundScores=[0,0];round=1;roundPause=respawn=throwAnim=0;nextFire=0;reload=0;recoil=recoilYaw=gunKick=0;wave=new HordeDirector(difficulty);zombieSerial=0;freshInventory();equip(0,true);spawnPlayer(true);
  buildRoster(mode,teamSize).forEach((config,i)=>addBot(config,i));
  $('menu').hidden=true;$('hud').hidden=false;$('touch').hidden=!touch;$('feed').replaceChildren();$('modeLabel').textContent=mode==='elimination'?teamSize+'v'+teamSize+' / ELIMINATION':MODE_NAMES[mode];
  $('objective').textContent=mode==='elimination'?'ONE LIFE / ELIMINATE THE ENEMY TEAM / FIRST TO 5 ROUNDS':mode==='tdm'?'YOUR TEAM / ENEMY TEAM - FIRST TO 50':mode==='ffa'?'EVERY PLAYER FOR THEMSELVES - FIRST TO 25':mode==='zombies'?'PREPARE FOR THE FIRST WAVE':'MOVING TARGETS / UNLIMITED RESERVES';
@@ -374,7 +374,7 @@ function updateZombies(dt){
   const dx=player.x-b.x,dz=player.z-b.z,distance=Math.hypot(dx,dz);b.yaw=Math.atan2(-dx,-dz);
   if(b.moanCD<=0){b.moanCD=3+Math.random()*4;if(distance<24)sound.growl({x:b.x,y:b.y+1.4,z:b.z});}
   if(b.attack>0){b.attack-=dt;if(b.attack<=0&&distance<1.55&&Math.abs(player.y-b.y)<1.2&&visible({x:b.x,y:b.y+1.4,z:b.z},eye(),world.boxes)){applyDamage(player,wave.spec.damage,b,false,'INFECTED');sound.growl({x:b.x,y:b.y+1.4,z:b.z});}}
-  else if(distance<1.45&&b.attackCD<=0&&Math.abs(player.y-b.y)<1.2){b.attack=.45;b.attackCD=1.55;}
+  else if(distance<1.45&&b.attackCD<=0&&Math.abs(player.y-b.y)<1.2){b.attack=wave.spec.windup;b.attackCD=wave.spec.attackCD;}
   let mx=0,mz=0;
   if(distance>1.12&&b.attack<=0){
    if(visible({x:b.x,y:b.y+.65,z:b.z},{x:player.x,y:player.y+.65,z:player.z},world.boxes)){mx=dx/Math.max(distance,.01);mz=dz/Math.max(distance,.01);}
@@ -384,7 +384,7 @@ function updateZombies(dt){
   const oldX=b.x,oldZ=b.z;accelerate(b,mx,mz,b.speed,dt);moveBody(b,dt,world.boxes);
   if(Math.hypot(b.x-oldX,b.z-oldZ)<.002&&distance>2)b.stuck=(b.stuck||0)+dt;else b.stuck=0;
   if(b.stuck>.7){b.pathTime=0;b.vx=(b.phase%2?1:-1)*2;b.vz=(b.phase%3?1:-1)*2;b.stuck=0;}
-  animateBot(b,dt);b.model.arms.forEach((a,i)=>{a.rotation.x=-1.15+(b.attack>0?Math.sin(b.attack/.45*Math.PI)*.65:Math.sin(clock*2+i)*.07);});b.model.group.rotation.z=Math.sin(clock*2+b.phase)*.025;
+  animateBot(b,dt);b.model.arms.forEach((a,i)=>{a.rotation.x=-1.15+(b.attack>0?Math.sin(b.attack/wave.spec.windup*Math.PI)*.65:Math.sin(clock*2+i)*.07);});b.model.group.rotation.z=Math.sin(clock*2+b.phase)*.025;
  }
  for(let i=bots.length-1;i>=0;i--)if(!bots[i].alive){removeActor(bots[i]);bots.splice(i,1);}
 }
