@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {makeBody,moveBody,accelerate,rayBox,visible,damageAt,canStand,WEAPONS} from '../scripts/physics.js';
+const box=(x,y,z,w,h,d)=>({min:{x:x-w/2,y:y-h/2,z:z-d/2},max:{x:x+w/2,y:y+h/2,z:z+d/2}});
+test('bullets cannot pass through cover and parallel rays miss safely',()=>{const wall=box(0,1,0,2,2,1);assert.equal(rayBox({x:0,y:1,z:5},{x:0,y:0,z:-1},wall),4.5);assert.equal(rayBox({x:3,y:1,z:5},{x:0,y:0,z:-1},wall),Infinity);assert.equal(visible({x:0,y:1,z:5},{x:0,y:1,z:-5},[wall]),false);assert.equal(visible({x:3,y:1,z:5},{x:3,y:1,z:-5},[wall]),true);});
+test('running into a wall stops without tunnelling',()=>{const p=makeBody(0,3),wall=box(0,1,0,8,2,1);for(let i=0;i<500;i++){accelerate(p,0,-1,8.2,1/120);moveBody(p,1/120,[wall]);}assert.ok(p.z>=.819);assert.equal(p.y,0);});
+test('diagonal motion slides along cover instead of sticking',()=>{const p=makeBody(0,2),wall=box(0,1,0,20,2,1);for(let i=0;i<120;i++){accelerate(p,1,-1,8.2,1/120);moveBody(p,1/120,[wall]);}assert.ok(p.x>4);assert.ok(p.z>=.819);});
+test('stairs can be climbed and support a standing player',()=>{const p=makeBody(-1,0),stairs=Array.from({length:12},(_,i)=>box(i*.5,(i+1)*.125,0,.5,(i+1)*.25,2));let top=0;for(let i=0;i<200;i++){accelerate(p,1,0,4,1/120);moveBody(p,1/120,stairs);top=Math.max(top,p.y);}assert.ok(top>=2.99,`Reached only ${top}`);});
+test('jump leaves the floor, lands on a platform, and cannot pass a ceiling',()=>{const p=makeBody(0,0),platform=box(0,.25,0,4,.5,4);p.y=.5;p.vy=8.3;p.grounded=false;let high=0;for(let i=0;i<180;i++){moveBody(p,1/120,[platform]);high=Math.max(high,p.y);}assert.ok(high>1.8);assert.equal(p.y,.5);assert.ok(p.grounded);const q=makeBody(0,0);q.vy=8;q.grounded=false;for(let i=0;i<50;i++)moveBody(q,1/120,[box(0,2.4,0,4,.2,4)]);assert.ok(q.y+q.height<=2.3+.01);});
+test('crouched player cannot stand through low overhead cover',()=>{const p=makeBody();p.height=1.12;assert.equal(canStand(p,[box(0,1.5,0,4,.2,4)]),false);});
+test('movement is stable across time steps',()=>{const simulate=hz=>{const p=makeBody();for(let i=0;i<hz*2;i++){accelerate(p,1,1,8.2,1/hz);moveBody(p,1/hz,[]);}return Math.hypot(p.x,p.z);};assert.ok(Math.abs(simulate(120)-simulate(240))<.04);});
+test('headshots, damage falloff and weapon configuration have sensible bounds',()=>{assert.equal(damageAt(27,10,30,true),54);assert.ok(damageAt(27,90,30)<27);assert.ok(damageAt(27,10000,30)>0);for(const w of WEAPONS){assert.ok(w.mag>0);assert.ok(w.interval>=.05);assert.ok(w.reload>1);}});

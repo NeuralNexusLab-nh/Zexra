@@ -1,0 +1,11 @@
+Copyright (c) 2026 NXLabTW / NeuralNexusLab-nh
+All rights reserved.
+
+Except for third-party components identified below, no permission is granted to
+copy, modify, redistribute, sublicense, or sell this software or its assets
+without prior written permission from the copyright holder. Permission to view
+and play the publicly hosted game is granted.
+
+Third-party exception:
+vendor/three.min.js is Three.js r160, licensed under the MIT License.
+See vendor/THREE-LICENSE.txt for its copyright notice and full license terms.

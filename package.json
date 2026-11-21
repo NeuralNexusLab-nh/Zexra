@@ -1,0 +1,1 @@
+{"name":"zexra","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node tools/serve.mjs","test":"node --test tests/*.test.mjs","check":"node --check scripts/game.js && node --check scripts/world.js && node --check scripts/weapons.js && node --check scripts/audio.js"}}

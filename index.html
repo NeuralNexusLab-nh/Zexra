@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11191c"><meta name="description" content="Zexra：以走位為核心的瀏覽器競技射擊遊戲。直接進場，挑戰 AI。">
+<title>Zexra — Tactical Arena</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+<canvas id="game" aria-label="Zexra 3D 遊戲畫面" tabindex="0"></canvas>
+<div id="boot"><div class="wordmark">ZEXRA<span>TACTICAL ARENA</span></div><div class="loading-line"></div><p id="bootText">正在準備競技場…</p></div>
+<div id="fatal" hidden><h1>無法啟動 3D 畫面</h1><p id="fatalText">請確認瀏覽器支援 WebGL，並開啟硬體加速。</p><button onclick="location.reload()">重新載入</button></div>
+<main id="menu" hidden>
+ <div class="menu-shade"></div>
+ <header><a class="brand" href="./" aria-label="Zexra 首頁"><svg viewBox="0 0 64 64"><path d="M15 17h39L27 43h23l-5 7H9l29-26H11z"/></svg>ZEXRA</a><nav aria-label="主選單"><button class="nav-on" id="playNav">開始遊戲</button><button id="armoryBtn">武器配置</button><button id="settingsBtn">設定</button></nav><span class="edition">NXLabTW <i>/</i> ARENA 1.0</span></header>
+ <section class="hero"><div class="eyebrow"><span class="dash"></span> OWN THE ANGLE.</div><h1>每一次走位，<br>都是你的<span>優勢。</span></h1><p>搶佔高地。控制後座。掌握下一次交鋒。</p><div class="features"><span>快速走位</span><span>戰術槍械</span><span>本機 AI 對戰</span></div></section>
+ <aside class="weapon-caption"><small>YOUR LOADOUT</small><h2 id="previewName">XR-416</h2><span id="previewType">5.56 × 45 / 突擊步槍</span><button id="changeWeapon">更換主武器</button></aside>
+ <section class="deployment" aria-label="對戰設定">
+  <div class="section-label"><span>選擇你的戰場</span><small>SOLO OPERATIONS</small></div>
+  <div class="mode-grid" id="modeGrid">
+   <button class="mode selected" data-mode="skirmish" aria-pressed="true"><span class="mode-tag">RESPAWN / 5 MIN</span><strong>自由交火</strong><small>對抗 5 名 AI，率先取得 25 次擊殺。</small></button>
+   <button class="mode" data-mode="duel" aria-pressed="false"><span class="mode-tag">1 VS 1 / FIRST TO 5</span><strong>戰術對決</strong><small>一條命、一個對手，率先贏得 5 回合。</small></button>
+   <button class="mode" data-mode="range" aria-pressed="false"><span class="mode-tag">NO PRESSURE / UNLIMITED</span><strong>自由練習</strong><small>移動靶與無限備彈，熟悉槍械和路線。</small></button>
+  </div>
+  <div class="launch-row"><label>戰場<select id="mapSelect"><option value="dock">DRYDOCK · 乾塢基地</option><option value="night">NIGHTSHIFT · 夜班工廠</option></select></label><label>AI 難度<select id="difficulty"><option value="easy">新兵</option><option value="normal" selected>標準</option><option value="hard">精銳</option></select></label><button id="controlsBtn" class="text-button">操作說明</button><button id="launch" class="primary">進入競技場 <span>DEPLOY</span></button></div>
+ </section>
+ <footer><span>無須登入 · 無排行榜 · 直接遊玩</span><span>HEADPHONES RECOMMENDED <i>⊙</i></span></footer>
+</main>
+<section id="hud" hidden aria-label="遊戲資訊">
+ <div class="top-left"><span class="micro-brand">ZEXRA</span><span id="locationLabel">乾塢基地</span><span id="fps">60 FPS</span></div>
+ <div class="match"><span id="modeLabel">自由交火</span><div><b id="yourScore">00</b><span id="timer">05:00</span><b id="enemyScore">00</b></div><small id="objective">率先取得 25 次擊殺</small></div>
+ <button id="pauseBtn" aria-label="暫停遊戲">Ⅱ</button><div id="feed" aria-live="polite"></div>
+ <div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div><div id="hitmarker">×</div><div id="damageNumbers"></div><div id="damageVignette"></div><div id="damageDirection">⌃</div>
+ <div id="announcement"><strong></strong><span></span></div><div id="killNotice"></div>
+ <div class="bottom-left"><div class="health-row"><span>生命值</span><b id="health">100</b><small id="movementState">READY</small></div><div class="health-track"><i id="healthBar"></i></div><div class="movement-hints"><kbd>SHIFT</kbd> 衝刺 <kbd>CTRL</kbd> 滑鏟 <kbd>SPACE</kbd> 跳躍</div></div>
+ <div class="bottom-right"><div id="reloadLabel"></div><div class="ammo"><b id="ammo">30</b><span>/ <span id="reserve">180</span></span></div><div id="weaponName">XR-416</div><div class="slots"><span id="slot0" class="active"><kbd>1</kbd> 主武器</span><span id="slot1"><kbd>2</kbd> P-19</span><span id="slot2"><kbd>3</kbd> 戰術刀</span><span><kbd>G</kbd> 手榴彈 <b id="grenades">2</b></span></div></div>
+ <div id="reloadTrack"><i></i></div><div id="spawnProtection">重生保護</div>
+</section>
+<div id="touch" hidden><div id="lookZone"></div><div id="joystick"><i></i></div><button data-action="fire" class="touch-fire">開火</button><button data-action="aim" class="touch-aim">瞄準</button><button data-action="jump" class="touch-jump">跳躍</button><button data-action="crouch" class="touch-slide">滑鏟</button><button data-action="reload" class="touch-reload">換彈</button><button data-action="switch" class="touch-switch">切槍</button><button data-action="grenade" class="touch-grenade">投彈</button></div>
+<dialog id="pauseDialog"><div class="dialog-heading"><small>OPERATION PAUSED</small><h2>暫停</h2><p>對戰時間與 AI 已暫停。</p></div><div class="stack"><button class="primary" id="resume">繼續遊戲</button><button id="pauseSettings">設定</button><button id="restart">重新開始</button><button id="quit">返回主選單</button></div></dialog>
+<dialog id="settingsDialog"><div class="dialog-top"><div><small>MAKE IT YOURS</small><h2>遊戲設定</h2></div><button class="close" data-close aria-label="關閉設定">×</button></div><div class="settings-grid">
+ <label>滑鼠靈敏度<output id="sensValue"></output><input id="sens" type="range" min="0.3" max="3" step="0.05"></label>
+ <label>視野 FOV<output id="fovValue"></output><input id="fov" type="range" min="70" max="110" step="1"></label>
+ <label>主音量<output id="volumeValue"></output><input id="volume" type="range" min="0" max="100" step="1"></label>
+ <label>畫面品質<select id="quality"><option value="low">效能 · 低</option><option value="medium">平衡 · 中</option><option value="high">細節 · 高</option></select></label>
+ <label class="check-label">鏡頭與槍械晃動<input id="motion" type="checkbox"></label><label class="check-label">顯示命中傷害<input id="numbers" type="checkbox"></label><label class="check-label">顯示 FPS<input id="showFps" type="checkbox"></label>
+ </div><p class="muted">設定只儲存在這個瀏覽器。若感到不適，可關閉晃動或降低視野。</p><button id="resetSettings" class="text-button">恢復預設</button></dialog>
+<dialog id="armoryDialog"><div class="dialog-top"><div><small>CHOOSE YOUR ADVANTAGE</small><h2>武器配置</h2></div><button class="close" data-close aria-label="關閉武器配置">×</button></div><div id="weaponGrid"></div><p class="muted">每場同時攜帶主武器、P-19 手槍、戰術刀與 2 枚手榴彈。所有武器直接開放。</p></dialog>
+<dialog id="controlsDialog"><div class="dialog-top"><div><small>MOVE. AIM. ADAPT.</small><h2>操作說明</h2></div><button class="close" data-close aria-label="關閉操作說明">×</button></div><div class="control-grid"><span>移動</span><b>W A S D</b><span>視角 / 開火 / 瞄準</span><b>滑鼠 / 左鍵 / 右鍵</b><span>衝刺</span><b>Shift</b><span>蹲下 / 衝刺時滑鏟</span><b>Ctrl 或 C</b><span>跳躍 / 連續跳躍</span><b>Space</b><span>換彈</span><b>R</b><span>主武器 / 手槍 / 刀</span><b>1 / 2 / 3 · 滾輪</b><span>手榴彈</span><b>G</b><span>檢視武器</span><b>F</b><span>暫停 / 釋放滑鼠</span><b>Esc</b><span>全螢幕</span><b>Alt + Enter</b></div><p class="muted">衝刺後蹲下可滑鏟；在掩體與階梯間跳躍取得高地。跑動與跳躍會降低射擊精度，瞄準或蹲下可以穩定槍口。手機使用左側搖桿移動、右側空白區轉向。</p></dialog>
+<dialog id="resultDialog"><small>OPERATION COMPLETE</small><h2 id="resultTitle">任務結束</h2><p id="resultSubtitle"></p><div class="result-stats"><div><b id="resultKills">0</b><span>擊殺</span></div><div><b id="resultDeaths">0</b><span>死亡</span></div><div><b id="resultAccuracy">0%</b><span>命中率</span></div><div><b id="resultHeads">0</b><span>爆頭擊殺</span></div></div><div class="row"><button class="primary" id="playAgain">再次出擊</button><button id="resultMenu">返回主選單</button></div></dialog>
+<script src="vendor/three.min.js"></script><script type="module" src="scripts/game.js"></script>
+<noscript>請啟用 JavaScript 以執行 Zexra。</noscript>
+</body></html>
