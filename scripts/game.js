@@ -1,5 +1,5 @@
 import {clamp,damp,makeBody,moveBody,accelerate,canStand,wallDistance,visible,rayBox,raySphere,damageAt,lookVector,movementVector,PRIMARY_COUNT,SIDEARM_INDEX,WEAPONS} from './physics.js?asset=92beea4cf702';
-import {createWorld,findPath} from './world.js?asset=d7480df0e5b3';
+import {createWorld,findPath} from './world.js?asset=5bcb27b24919';
 import {createWeapon,createSoldier,createZombie} from './weapons.js?asset=a68933377b32';
 import {SoundEngine} from './audio.js?asset=6c67f8b2dd63';
 import {createHorrorWorld} from './horror.js?asset=9507391a7ce9';
@@ -13,7 +13,7 @@ const touch=matchMedia('(pointer:coarse)').matches;document.body.classList.toggl
 let renderer,world,camera,viewCamera,viewScene,gun,initialized=false;
 const sound=new SoundEngine();
 let state='menu',mode='tdm',map='dock',difficulty='normal',primary=settings.primary,selectedSlot=0;
-let teamSize=1,wave=new HordeDirector(),zombieSerial=0;const mouseLook=new MouseLookTracker();
+let aiAccumulator=0,teamSize=1,wave=new HordeDirector(),zombieSerial=0;const mouseLook=new MouseLookTracker();
 const player=makeBody(-22,-22);Object.assign(player,{id:0,team:0,hp:100,kills:0,deaths:0,heads:0,shots:0,hits:0,alive:true,invulnerable:0,grenades:2});
 let yaw=0,pitch=0,lookX=0,lookY=0,ads=0,recoil=0,recoilYaw=0,gunKick=0,reload=0,reloadStage=0,nextFire=0,inspect=0,firePressed=false,aimPressed=false,lastFire=false,weaponSwap=0,sprintPose=0,pendingSlot=null,holster=0,throwAnim=0;
 let inventory=[],bots=[],effects=[],grenades=[],time=300,clock=0,round=1,roundPause=0,respawn=0,announcementTime=0,killNoticeTime=0,hitTime=0,damageTime=0,footDistance=0,bob=0,eyeHeight=1.63;
@@ -81,7 +81,7 @@ async function lockPointer(){
   if(document.pointerLockElement===canvas){pointerError='';$('pointerHint').hidden=true;}else $('pointerHint').hidden=false;
  }catch(e){pointerError=e.message;$('pointerHint').hidden=false;}
 }
-function selectMode(next){mode=next;syncPlayUI();const preview=mode==='zombies'?'horror':$('mapSelect').value;if(world.theme!==preview){loadWorld(preview);applyQuality();}}
+function selectMode(next){const select=$('mapSelect');if(mode!=='zombies'&&select.value!=='horror')select.dataset.arena=select.value;mode=next;if(mode==='zombies')select.value='horror';else if(select.value==='horror')select.value=select.dataset.arena||'dock';syncPlayUI();const preview=mode==='zombies'?'horror':$('mapSelect').value;if(world.theme!==preview){loadWorld(preview);applyQuality();}}
 function syncPlayUI(){
  document.querySelectorAll('[data-mode]').forEach(b=>{const on=b.dataset.mode===mode;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
  $('sizeGrid').querySelectorAll('button').forEach(b=>{const on=Number(b.dataset.size)===teamSize;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
@@ -99,7 +99,7 @@ function addBot(config,index){
 async function startMatch(){
  closeDialogs();clearInput();state='running';document.body.classList.add('playing');map=mode==='zombies'?'horror':$('mapSelect').value;difficulty=$('difficulty').value;
  if(world.theme!==map){loadWorld(map);applyQuality();}else{clearEffects();clearActors();}
- Object.assign(player,{id:0,team:0,hp:100,kills:0,deaths:0,heads:0,shots:0,hits:0,alive:true,grenades:2});clock=0;time=300;round=1;roundPause=respawn=throwAnim=0;nextFire=0;reload=0;recoil=recoilYaw=gunKick=0;wave=new HordeDirector();zombieSerial=0;freshInventory();equip(0,true);spawnPlayer(true);
+ Object.assign(player,{id:0,team:0,hp:100,kills:0,deaths:0,heads:0,shots:0,hits:0,alive:true,grenades:2});clock=0;aiAccumulator=0;time=300;round=1;roundPause=respawn=throwAnim=0;nextFire=0;reload=0;recoil=recoilYaw=gunKick=0;wave=new HordeDirector();zombieSerial=0;freshInventory();equip(0,true);spawnPlayer(true);
  buildRoster(mode,teamSize).forEach((config,i)=>addBot(config,i));
  $('menu').hidden=true;$('hud').hidden=false;$('touch').hidden=!touch;$('feed').replaceChildren();$('modeLabel').textContent=MODE_NAMES[mode]+(mode==='tdm'?' / '+teamSize+'v'+teamSize:'');
  $('objective').textContent=mode==='tdm'?'YOUR TEAM / ENEMY TEAM - FIRST TO 50':mode==='ffa'?'EVERY PLAYER FOR THEMSELVES - FIRST TO 25':mode==='zombies'?'PREPARE FOR THE FIRST WAVE':'MOVING TARGETS / UNLIMITED RESERVES';
@@ -112,7 +112,7 @@ function spawnPlayer(initial=false){
  if(initial&&mode==='tdm')chosen={x:-22,z:-24};if(mode==='zombies')chosen={x:0,z:8};
  Object.assign(player,makeBody(chosen.x,chosen.z),{hp:100,alive:true,invulnerable:mode==='range'?0:1.8,grenades:2});yaw=mode==='zombies'?0:Math.atan2(chosen.x,chosen.z);pitch=0;freshInventory();reload=0;recoil=0;eyeHeight=1.63;equip(selectedSlot,true);respawn=0;footDistance=0;mouseLook.reset();lookX=lookY=0;if(!touch&&state==='running'){canvas.focus({preventScroll:true});hadPointerLock=document.pointerLockElement===canvas;$('pointerHint').hidden=hadPointerLock;}
 }
-function showMenu(){state='menu';$('scope').hidden=true;document.body.classList.remove('playing');closeDialogs();clearInput();document.exitPointerLock?.();$('menu').hidden=false;$('hud').hidden=true;$('touch').hidden=true;gun.visible=true;clearEffects();clearActors();if(world.theme==='horror'){loadWorld($('mapSelect').value);applyQuality();}equip(0,true);sound.pause(true);sound.setHorror(false);}
+function showMenu(){state='menu';$('scope').hidden=true;document.body.classList.remove('playing');closeDialogs();clearInput();document.exitPointerLock?.();$('menu').hidden=false;$('hud').hidden=true;$('touch').hidden=true;gun.visible=true;clearEffects();clearActors();if(world.theme==='horror'&&mode!=='zombies'){loadWorld($('mapSelect').value);applyQuality();}equip(0,true);sound.pause(true);sound.setHorror(false);}
 function pause(){if(state!=='running')return;state='paused';document.body.classList.remove('playing');clearInput();hadPointerLock=false;document.exitPointerLock?.();$('touch').hidden=true;closeDialogs();$('pauseDialog').showModal();sound.pause(true);}
 async function resume(){if(state!=='paused')return;closeDialogs();clearInput();state='running';document.body.classList.add('playing');$('touch').hidden=!touch;sound.start().catch(()=>{});sound.pause(false);await lockPointer();}
 function endMatch(reason){state='results';document.body.classList.remove('playing');clearInput();document.exitPointerLock?.();$('touch').hidden=true;closeDialogs();$('resultTitle').textContent=reason;$('resultSubtitle').textContent=(map==='horror'?'THE HOLLOW':map==='night'?'NIGHTSHIFT':'DRYDOCK')+' / '+MODE_NAMES[mode]+(mode==='zombies'?' / WAVE '+wave.number:'');$('resultKills').textContent=player.kills;$('resultDeaths').textContent=player.deaths;$('resultAccuracy').textContent=(player.shots?Math.round(player.hits/player.shots*100):0)+'%';$('resultHeads').textContent=player.heads;$('resultDialog').showModal();sound.pause(true);}
@@ -278,7 +278,7 @@ function tick(dt){
  if(mode==='tdm'||mode==='ffa'){time-=dt;if(time<=0){const [a,b]=matchScores(player,bots,mode);endMatch(a>b?'VICTORY':a===b?'DRAW':'MATCH COMPLETE');return;}}
  if(mode==='zombies')updateWave(dt);
 
- updatePlayer(dt);if(state!=='running')return;updateBots(dt);if(state!=='running')return;updateGrenades(dt);updateEffects(dt);
+ updatePlayer(dt);if(state!=='running')return;aiAccumulator+=dt;if(aiAccumulator>=1/30){updateBots(aiAccumulator);aiAccumulator=0;}if(state!=='running')return;updateGrenades(dt);updateEffects(dt);
 }
 function updateHUD(){
  if(!initialized)return;
@@ -287,10 +287,10 @@ function updateHUD(){
  const w=gunConfig(),inv=inventory[selectedSlot];$('ammo').textContent=selectedSlot===2?'—':inv?.ammo??w.mag;$('reserve').textContent=selectedSlot===2?'—':mode==='range'?'∞':inv?.reserve??w.reserve;
  $('ammo').style.color=inv?.ammo<=5?'#f3a187':'';$('weaponName').textContent=w.name+' / '+(selectedSlot===2?'MELEE':w.caliber);$('grenades').textContent=player.grenades;
  for(let i=0;i<3;i++)$('slot'+i).classList.toggle('active',i===selectedSlot);
- const scores=matchScores(player,bots,mode);$('yourScore').textContent=String(scores[0]).padStart(2,'0');$('enemyScore').textContent=String(mode==='zombies'?wave.pending+bots.filter(b=>b.alive).length:scores[1]).padStart(2,'0');$('timer').textContent=mode==='zombies'?'WAVE '+wave.number:mode==='range'?'∞':`${Math.floor(Math.max(0,time)/60).toString().padStart(2,'0')}:${Math.floor(Math.max(0,time)%60).toString().padStart(2,'0')}`;
+ const scores=matchScores(player,bots,mode);$('yourScore').textContent=String(scores[0]).padStart(2,'0');$('enemyScore').textContent=String(mode==='zombies'?wave.pending+bots.filter(b=>b.alive).length:scores[1]).padStart(2,'0');$('timer').textContent=mode==='zombies'?(wave.number?'WAVE '+wave.number:'PREPARE'):mode==='range'?'∞':`${Math.floor(Math.max(0,time)/60).toString().padStart(2,'0')}:${Math.floor(Math.max(0,time)%60).toString().padStart(2,'0')}`;
  $('reloadLabel').textContent=reload>0?'RELOADING…':selectedSlot!==2&&inv?.ammo===0?'PRESS R TO RELOAD':'';$('reloadTrack').style.display=reload>0?'block':'none';if(reload>0)$('reloadTrack').firstElementChild.style.width=(1-reload/w.reload)*100+'%';
  $('movementState').textContent=player.slide>0?'SLIDE':!player.grounded?'AIR':player.height<1.5?'CROUCH':Math.hypot(player.vx,player.vz)>6?'SPRINT':'READY';
- $('spawnProtection').style.opacity=player.invulnerable>0?'1':'0';$('fps').textContent=fps+' FPS';updateAllyMarkers();if(mode==='zombies')$('objective').textContent=wave.active?(wave.pending+bots.filter(b=>b.alive).length)+' INFECTED REMAINING':'NEXT WAVE IN '+Math.ceil(wave.wait)+'s / RESUPPLY';
+ $('spawnProtection').style.opacity=player.invulnerable>0?'1':'0';$('fps').textContent=fps+' FPS';updateAllyMarkers();if(mode==='zombies')$('objective').textContent=wave.active?(wave.pending+bots.filter(b=>b.alive).length)+' INFECTED REMAINING':(wave.number?'NEXT WAVE IN ':'FIRST WAVE IN ')+Math.ceil(wave.wait)+(wave.number?'s / RESUPPLY':'s / PREPARE');
 }
 function updateView(dt){
  recoil=damp(recoil,0,10,dt);recoilYaw=damp(recoilYaw,0,10,dt);gunKick=damp(gunKick,0,18,dt);ads=damp(ads,((aimPressed||touchAim)&&reload<=0&&player.alive&&selectedSlot!==2)?1:0,15,dt);

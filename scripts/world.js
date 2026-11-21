@@ -91,7 +91,7 @@ export function createWorld(renderer,theme='dock'){
   const node={x,y:.9,z,ix,iz,edges:[]};grid.set(`${ix},${iz}`,nav.length);nav.push(node);
  }
  nav.forEach(n=>{for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const idx=grid.get(`${n.ix+dx},${n.iz+dz}`);if(idx!==undefined&&visible(n,nav[idx],boxes))n.edges.push(idx);}});
- const spawns=[[-22,-22],[22,22],[-22,22],[22,-22],[0,-24],[0,24],[-24,0],[24,0]].map(([x,z])=>({x,y:0,z}));
+ const spawns=[[-22,-22],[22,22],[-22,22],[22,-22],[0,-24],[0,24],[-24,0],[24,0],[-12,-24],[12,-24],[-12,24],[12,24]].map(([x,z])=>({x,y:0,z}));
  return{scene,boxes,nav,spawns,sun,night,label,decor,dispose(){scene.traverse(o=>{if(o.isMesh&&!o.isInstancedMesh&&o.geometry&&!resources.includes(o.geometry))o.geometry.dispose();});for(const r of resources)r.dispose();scene.clear();}};
 }
 export function findPath(nav,start,goal){
