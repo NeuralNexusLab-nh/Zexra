@@ -3,7 +3,7 @@ import {createWorld,findPath} from './world.js?asset=3405ee404ba2';
 import {createWeapon,createSoldier} from './weapons.js?asset=38d0ac08eaa9';
 import {SoundEngine} from './audio.js?asset=4ac14198dc7a';
 const T=window.THREE,$=id=>document.getElementById(id),canvas=$('game');
-const defaults={sens:1,adsSens:.65,touchSens:.9,invertY:false,fov:90,volume:65,quality:matchMedia('(pointer:coarse)').matches?'medium':'high',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,numbers:true,showFps:true,primary:0};
+const defaults={sens:1,adsSens:.65,touchSens:.9,invertY:false,fov:90,volume:65,quality:'medium',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,numbers:true,showFps:true,primary:0};
 let settings={...defaults};try{const s=JSON.parse(localStorage.getItem('zexra.settings.v1'));for(const k of Object.keys(defaults))if(typeof s?.[k]===typeof defaults[k])settings[k]=s[k];}catch{}
 settings.sens=clamp(settings.sens,.3,3);settings.fov=clamp(settings.fov,70,110);settings.volume=clamp(settings.volume,0,100);settings.primary=clamp(Math.floor(settings.primary),0,3);if(!['low','medium','high'].includes(settings.quality))settings.quality='high';
 const touch=matchMedia('(pointer:coarse)').matches;document.body.classList.toggle('touch',touch);
@@ -16,7 +16,7 @@ let inventory=[],bots=[],effects=[],grenades=[],time=300,clock=0,round=1,roundPa
 let lastFrame=performance.now(),accumulator=0,fpsFrames=0,fpsTime=0,fps=60,hudTimer=0,menuTime=0,renderFrames=0,pointerError='',hadPointerLock=false,dragLook=false;
 const keys=new Set(),touchMove={x:0,z:0};let touchAim=false,throwRequested=false,jumpQueued=false,slideQueued=false,aimMode=false;
 const names=['VIPER','ROOK','NOMAD','ECHO','GHOST'];
-const diffConfig={easy:{speed:3.8,reaction:.8,spread:.065,interval:.21,count:3},normal:{speed:5,reaction:.38,spread:.025,interval:.14,count:5},hard:{speed:6,reaction:.22,spread:.013,interval:.105,count:5}};
+const diffConfig={easy:{speed:3.5,reaction:1.05,spread:.09,interval:.27,count:3},normal:{speed:4.5,reaction:.62,spread:.042,interval:.20,count:5},hard:{speed:5.5,reaction:.32,spread:.023,interval:.15,count:5}};
 const flashLight=new T.PointLight(0xffbd66,0,7);
 const tmp=new T.Vector3(),tmp2=new T.Vector3(),direction=new T.Vector3(),viewTarget=new T.Vector3();
 const effectGeometries={spark:new T.SphereGeometry(.035,5,4),shell:new T.CylinderGeometry(.014,.014,.055,6),grenade:new T.SphereGeometry(.095,10,8),smoke:new T.SphereGeometry(1,8,6)};
@@ -35,7 +35,7 @@ function loadWorld(theme){
  clearEffects();for(const b of bots){world?.scene.remove(b.model.group);b.model.dispose();}bots=[];
  world?.dispose();world=createWorld(renderer,theme);viewScene.environment=world.scene.environment;renderer.toneMappingExposure=world.night?1.1:1.02;
 }
-function applyQuality(){if(!renderer)return;const q=settings.quality;renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.6:q==='medium'?1.15:.8));renderer.shadowMap.enabled=q!=='low';world.sun.shadow.mapSize.set(q==='high'?2048:1024,q==='high'?2048:1024);world.sun.shadow.map?.dispose();world.sun.shadow.map=null;world.sun.shadow.needsUpdate=true;resize();}
+function applyQuality(){if(!renderer)return;const q=settings.quality;renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.3:q==='medium'?1:.75));renderer.shadowMap.enabled=q!=='low';world.sun.shadow.mapSize.set(q==='high'?2048:1024,q==='high'?2048:1024);world.sun.shadow.map?.dispose();world.sun.shadow.map=null;world.sun.shadow.needsUpdate=true;resize();}
 function resize(){if(!renderer)return;renderer.setSize(innerWidth,innerHeight,false);camera.aspect=viewCamera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();viewCamera.updateProjectionMatrix();}
 function gunConfig(){return selectedSlot===2?{id:'knife',name:'TACTICAL KNIFE',damage:65,interval:.55,reload:0,mag:0,spread:0,recoil:0,range:2.4,pellets:1,zoom:settings.fov}:WEAPONS[selectedSlot===0?primary:4];}
 function equip(slot,force=false){
@@ -169,7 +169,7 @@ function updateBots(dt){
     for(const a of [player,...bots]){if(a===b||!a.alive||a.invulnerable>0)continue;const h=bodyHit(o,dir,a);if(h.t<t){t=h.t;hit=a;head=h.head;}}
     const end=new T.Vector3(o.x+dir.x*t,o.y+dir.y*t,o.z+dir.z*t);tracer(new T.Vector3(o.x,o.y-.25,o.z),end);
     const distanceToPlayer=Math.hypot(b.x-player.x,b.z-player.z);if(distanceToPlayer<55)sound.shot('carbine',o,!visible(eye(),o,world.boxes));
-    if(hit)applyDamage(hit,damageAt(difficulty==='easy'?15:19,t,25,head),b,head);else if(t<180)impact(end,dir);
+    if(hit)applyDamage(hit,damageAt(difficulty==='easy'?13:difficulty==='hard'?19:16,t,25,head),b,head);else if(t<180)impact(end,dir);
    }
   }else{
    if(b.pathTime<=0||!b.path.length){b.pathTime=2+Math.random();const goal=b.memory>0?b.lastKnown:world.nav[Math.floor(Math.random()*world.nav.length)];b.path=findPath(world.nav,b,goal);}
@@ -336,5 +336,5 @@ function initTouch(){
  $('touch').querySelectorAll('button').forEach(button=>{const action=button.dataset.action;button.addEventListener('pointerdown',e=>{e.preventDefault();button.setPointerCapture(e.pointerId);if(action==='fire')firePressed=true;if(action==='aim'){touchAim=!touchAim;button.style.borderColor=touchAim?'#80d5ff':'';}if(action==='jump')jumpQueued=true;if(action==='crouch'){keys.add('TouchCrouch');slideQueued=true;}if(action==='reload')requestReload();if(action==='switch')requestEquip((selectedSlot+1)%3);if(action==='grenade')throwRequested=true;});const release=()=>{if(action==='fire')firePressed=false;if(action==='crouch')keys.delete('TouchCrouch');};button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);});
 }
 // Read-only diagnostics for reproducible browser QA; no network calls or telemetry.
-Object.defineProperty(window,'ZEXRA',{value:Object.freeze({get snapshot(){return{state,mode,map,difficulty,time,clock,round,fps,renderFrames,pointerLocked:document.pointerLockElement===canvas,pointerError,player:{x:player.x,y:player.y,z:player.z,hp:player.hp,kills:player.kills,deaths:player.deaths,alive:player.alive,grounded:player.grounded,slide:player.slide,invulnerable:player.invulnerable},weapon:gunConfig().id,ammo:inventory[selectedSlot]?.ammo,reserve:inventory[selectedSlot]?.reserve,reload,bots:bots.map(b=>({name:b.name,x:b.x,z:b.z,hp:b.hp,alive:b.alive,kills:b.kills,path:b.path.length})),effects:effects.length,grenades:grenades.length,drawCalls:renderer?.info.render.calls,triangles:renderer?.info.render.triangles};}}),writable:false});
+Object.defineProperty(window,'ZEXRA',{value:Object.freeze({get snapshot(){return{state,mode,map,difficulty,time,clock,round,fps,renderFrames,look:{yaw,pitch},aimAlignment:camera?camera.getWorldDirection(new T.Vector3()).dot(aimDirection(0)):1,settings:{...settings},shots:player.shots,hits:player.hits,scopeVisible:!$('scope').hidden,pointerLocked:document.pointerLockElement===canvas,pointerError,player:{x:player.x,y:player.y,z:player.z,hp:player.hp,kills:player.kills,deaths:player.deaths,alive:player.alive,grounded:player.grounded,slide:player.slide,invulnerable:player.invulnerable},weapon:gunConfig().id,ammo:inventory[selectedSlot]?.ammo,reserve:inventory[selectedSlot]?.reserve,reload,bots:bots.map(b=>({name:b.name,x:b.x,z:b.z,hp:b.hp,alive:b.alive,kills:b.kills,path:b.path.length})),effects:effects.length,grenades:grenades.length,drawCalls:renderer?.info.render.calls,triangles:renderer?.info.render.triangles};}}),writable:false});
 setup();
