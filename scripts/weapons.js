@@ -32,11 +32,15 @@ export function createWeapon(id='ak47',hands=true){
  const charging=(x=.08,z=-.15)=>{box(M.steel,x,.03,z,.012,.05,.13,bolt);box(M.dark,x*1.35,.025,z+.04,.065,.025,.025,bolt);};
  const rail=(start,end,height=.14)=>{box(M.dark,0,height-.015,(start+end)/2,.10,.025,Math.abs(start-end));for(let z=start;z>end;z-=.035)box(M.metal,0,height+.005,z,.115,.015,.014);};
  const rectOptic=(z=-.26,y=.255)=>{
-  const optic=new T.Group();optic.position.set(0,y-.075,z);optic.scale.set(.375,.375,1);root.add(optic);
+  const optic=new T.Group();root.add(optic);
   box(M.dark,0,-.08,0,.12,.045,.17,optic);box(M.dark,-.093,0,0,.018,.12,.07,optic);box(M.dark,.093,0,0,.018,.12,.07,optic);
   box(M.dark,0,.059,0,.20,.016,.07,optic);box(M.dark,0,-.059,0,.20,.016,.07,optic);
-  box(clearOptic,0,0,-.025,.169,.098,.002,optic);const dot=part(geometries.sphere,M.red,0,0,.012,.004267,.004267,.0022,optic);dot.renderOrder=12;
-  box(M.dark,.116,-.025,0,.035,.05,.055,optic);sightY=y-.075;root.userData.optic='rectangular-red-dot';root.userData.opticGroup=optic;
+  box(clearOptic,0,0,-.025,.169,.098,.002,optic);const dot=part(geometries.sphere,M.red,0,0,.012,.0016,.0016,.0022,optic);dot.renderOrder=12;
+  box(M.dark,.116,-.025,0,.035,.05,.055,optic);
+  const receiverWidth=({ak47:.125,vcr2:.16,mp5:.125,garand:.125,p90:.17,pistol:.12})[id];
+  const width=new T.Box3().setFromObject(optic).getSize(new T.Vector3()).x,scale=receiverWidth*.92/width;
+  optic.scale.set(scale,scale,1);dot.scale.set(.0016/scale,.0016/scale,.0022);sightY=y-.12+.12*scale;optic.position.set(0,sightY,z);
+  root.userData.optic='rectangular-red-dot';root.userData.opticGroup=optic;
  };
  const scope=(z=-.4,y=.28)=>{
   for(const at of [z-.14,z+.13]){box(M.dark,0,y-.09,at,.09,.12,.065);cyl(M.dark,0,y,at,.065,.04);}
