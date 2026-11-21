@@ -1,7 +1,7 @@
 export const BOT_TUNING=Object.freeze({
- easy:{speed:3.2,reaction:1.35,spread:.13,interval:.36,damage:9},
- normal:{speed:3.9,reaction:1.15,spread:.11,interval:.34,damage:10},
- hard:{speed:4.7,reaction:.62,spread:.05,interval:.23,damage:15}
+ easy:{speed:3.2,reaction:1.35,spread:.122,interval:.36,damage:9},
+ normal:{speed:3.9,reaction:1.15,spread:.102,interval:.34,damage:10},
+ hard:{speed:4.7,reaction:.62,spread:.047,interval:.23,damage:15}
 });
 export const MODE_NAMES={elimination:'ELIMINATION',tdm:'TEAM DEATHMATCH',ffa:'FREE FOR ALL',zombies:'DEAD SIGNAL',range:'SHOOTING RANGE'};
 export const teamMode=mode=>mode==='tdm'||mode==='elimination';
