@@ -1,5 +1,5 @@
 const T=window.THREE;
-const materials={metal:new T.MeshStandardMaterial({color:0x344049,roughness:.38,metalness:.88}),dark:new T.MeshStandardMaterial({color:0x141e24,roughness:.58,metalness:.42}),polymer:new T.MeshStandardMaterial({color:0x303a36,roughness:.86,metalness:.05}),tan:new T.MeshStandardMaterial({color:0x827957,roughness:.87,metalness:.05}),steel:new T.MeshStandardMaterial({color:0x727f81,roughness:.3,metalness:.92}),rubber:new T.MeshStandardMaterial({color:0x1b2425,roughness:.94}),glove:new T.MeshStandardMaterial({color:0x3d4b45,roughness:1}),sleeve:new T.MeshStandardMaterial({color:0x657365,roughness:1}),glass:new T.MeshStandardMaterial({color:0x275963,roughness:.1,metalness:.7,transparent:true,opacity:.62}),red:new T.MeshBasicMaterial({color:0xf96d4d}),brass:new T.MeshStandardMaterial({color:0xbca256,roughness:.35,metalness:.8})};
+const materials={metal:new T.MeshStandardMaterial({color:0x344049,roughness:.38,metalness:.88}),dark:new T.MeshStandardMaterial({color:0x141e24,roughness:.58,metalness:.42}),polymer:new T.MeshStandardMaterial({color:0x303a36,roughness:.86,metalness:.05}),tan:new T.MeshStandardMaterial({color:0x827957,roughness:.87,metalness:.05}),steel:new T.MeshStandardMaterial({color:0x727f81,roughness:.3,metalness:.92}),rubber:new T.MeshStandardMaterial({color:0x1b2425,roughness:.94}),glove:new T.MeshStandardMaterial({color:0x3d4b45,roughness:1}),sleeve:new T.MeshStandardMaterial({color:0x657365,roughness:1}),glass:new T.MeshStandardMaterial({color:0x275963,roughness:.1,metalness:.7,transparent:true,opacity:.62}),red:new T.MeshBasicMaterial({color:0xff2020,toneMapped:false}),brass:new T.MeshStandardMaterial({color:0xbca256,roughness:.35,metalness:.8})};
 const bevelShape=new T.Shape();bevelShape.moveTo(-.465,-.465);bevelShape.lineTo(.465,-.465);bevelShape.lineTo(.465,.465);bevelShape.lineTo(-.465,.465);bevelShape.closePath();
 const bevelBox=new T.ExtrudeGeometry(bevelShape,{depth:.93,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.035,bevelThickness:.035});bevelBox.translate(0,0,-.465);
 const geometries={box:bevelBox,cyl:new T.CylinderGeometry(1,1,1,16),sphere:new T.SphereGeometry(1,12,8)};
@@ -32,10 +32,11 @@ export function createWeapon(id='ak47',hands=true){
  const charging=(x=.08,z=-.15)=>{box(M.steel,x,.03,z,.012,.05,.13,bolt);box(M.dark,x*1.35,.025,z+.04,.065,.025,.025,bolt);};
  const rail=(start,end,height=.14)=>{box(M.dark,0,height-.015,(start+end)/2,.10,.025,Math.abs(start-end));for(let z=start;z>end;z-=.035)box(M.metal,0,height+.005,z,.115,.015,.014);};
  const rectOptic=(z=-.26,y=.255)=>{
-  box(M.dark,0,y-.08,z,.12,.045,.17);box(M.dark,-.093,y,z,.018,.12,.07);box(M.dark,.093,y,z,.018,.12,.07);
-  box(M.dark,0,y+.059,z,.20,.016,.07);box(M.dark,0,y-.059,z,.20,.016,.07);
-  box(clearOptic,0,y,z-.025,.169,.098,.002);const dot=part(geometries.sphere,M.red,0,y,z+.012,.0022,.0022,.0022);dot.renderOrder=12;
-  box(M.dark,.116,y-.025,z,.035,.05,.055);sightY=y;root.userData.optic='rectangular-red-dot';
+  const optic=new T.Group();optic.position.set(0,y-.06,z);optic.scale.set(.5,.5,1);root.add(optic);
+  box(M.dark,0,-.08,0,.12,.045,.17,optic);box(M.dark,-.093,0,0,.018,.12,.07,optic);box(M.dark,.093,0,0,.018,.12,.07,optic);
+  box(M.dark,0,.059,0,.20,.016,.07,optic);box(M.dark,0,-.059,0,.20,.016,.07,optic);
+  box(clearOptic,0,0,-.025,.169,.098,.002,optic);const dot=part(geometries.sphere,M.red,0,0,.012,.0032,.0032,.0022,optic);dot.renderOrder=12;
+  box(M.dark,.116,-.025,0,.035,.05,.055,optic);sightY=y-.06;root.userData.optic='rectangular-red-dot';root.userData.opticGroup=optic;
  };
  const scope=(z=-.4,y=.28)=>{
   for(const at of [z-.14,z+.13]){box(M.dark,0,y-.09,at,.09,.12,.065);cyl(M.dark,0,y,at,.065,.04);}

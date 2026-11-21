@@ -1,6 +1,6 @@
 import {clamp,damp,makeBody,moveBody,accelerate,canStand,wallDistance,visible,rayBox,raySphere,damageAt,lookVector,movementVector,PRIMARY_COUNT,SIDEARM_INDEX,WEAPONS} from './physics.js?asset=300d47b839c0';
 import {createWorld,findPath} from './world.js?asset=f61e107f920a';
-import {createWeapon,createSoldier,createZombie} from './weapons.js?asset=b92047f8764d';
+import {createWeapon,createSoldier,createZombie} from './weapons.js?asset=20315c479543';
 import {SoundEngine} from './audio.js?asset=ff009325c2f0';
 import {createHorrorWorld} from './horror.js?asset=d9db9395f817';
 import {BOT_TUNING,MODE_NAMES,buildRoster,hostile,matchScores,safeSpawn,HordeDirector,teamMode,eliminationWinner} from './rules.js?asset=ac10a209c9fe';
@@ -253,7 +253,7 @@ function updateGrenades(dt){
   if(t<l+.1){g.v.x*=-.55;g.v.z*=-.55;g.v.y=Math.abs(g.v.y)*.5;g.bounces++;if(g.bounces<5)sound.reload(0);}else g.mesh.position.add(delta);
   if(g.mesh.position.y<.12){g.mesh.position.y=.12;g.v.y=Math.abs(g.v.y)*.42;g.v.x*=.8;g.v.z*=.8;}
   g.mesh.rotation.x+=dt*7;g.mesh.rotation.z+=dt*4;
-  if(g.life<=0){explode(g.mesh.position,g.owner);world.scene.remove(g.mesh);grenades.splice(i,1);}
+  if(g.life<=0){explode(g.mesh.position,g.owner);if(roundPause>0||state!=='running')return;world.scene.remove(g.mesh);grenades.splice(i,1);}
  }
 }
 function explode(position,owner){
@@ -334,7 +334,7 @@ function updateView(dt){
   data.mag.visible=pose.seated&&w.id!=='garand';data.oldMag.visible=pose.oldVisible;data.newMag.visible=pose.newVisible;
   data.oldMag.position.set(0,pose.oldY,pose.oldZ);data.oldMag.rotation.x=-.12*pose.work;
   data.newMag.position.set(0,pose.newY,pose.newZ);data.newMag.rotation.x=-.12*(1-T.MathUtils.smoothstep(1-reload/w.reload,.54,.76));
-  if(support){support.position.set(-.015,pose.handY-.10,pose.handZ-(data.supportZ||-.62));support.rotation.x=.12*pose.work;if(charge>.005){support.position.set(.12,.11,-.15-(data.supportZ||-.62)+charge);}}
+  if(support){const offset=w.id==='p90'?.255:w.id==='garand'?.205:-.10;support.position.set(-.015,pose.handY+offset,pose.handZ-(data.supportZ||-.62));support.rotation.x=.12*pose.work;if(charge>.005){support.position.set(.12,.11,-.15-(data.supportZ||-.62)+charge);}}
  }
 
  sprintPose=damp(sprintPose,moving>.9&&Math.hypot(player.vx,player.vz)>6&&!firePressed&&ads<.1&&reload<=0?1:0,10,dt);gun.rotation.x+=sprintPose*.18;gun.rotation.z-=sprintPose*.18;gun.position.y-=sprintPose*.07;
