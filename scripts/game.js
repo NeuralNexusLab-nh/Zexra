@@ -1,6 +1,6 @@
 import {clamp,damp,makeBody,moveBody,accelerate,canStand,wallDistance,visible,rayBox,raySphere,damageAt,lookVector,movementVector,PRIMARY_COUNT,SIDEARM_INDEX,WEAPONS,armoryGroups,weaponStats} from './physics.js?asset=a3c90f79fe02';
 import {createWorld,findPath} from './world.js?asset=ecbaa073d463';
-import {createWeapon,createSoldier,createZombie} from './weapons.js?asset=13588971c4f2';
+import {createWeapon,createSoldier,createZombie} from './weapons.js?asset=e8326dcf5fed';
 import {SoundEngine} from './audio.js?asset=ff009325c2f0';
 import {createHorrorWorld} from './horror.js?asset=b35a56a72a3a';
 import {BOT_TUNING,MODE_NAMES,buildRoster,hostile,matchScores,safeSpawn,HordeDirector,teamMode,eliminationWinner} from './rules.js?asset=9cff2acaf78f';
