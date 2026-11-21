@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';
+const THREE={};vm.runInNewContext(await readFile(new URL('../vendor/three.min.js',import.meta.url),'utf8'),{exports:THREE,module:{exports:THREE},console:{warn(){}}});
+globalThis.window={THREE};globalThis.document={createElement(){return{width:0,height:0,getContext(){return{createRadialGradient(){return{addColorStop(){}};},fillRect(){}};}};}};
+const {createHorrorWorld}=await import('../scripts/horror.js');const {findPath}=await import('../scripts/world.js');
+test('cemetery is a separate night map with navigable routes from every spawn',()=>{const w=createHorrorWorld(null);assert.equal(w.theme,'horror');assert.equal(w.night,true);assert.ok(w.nav.length>150);for(const spawn of w.spawns){assert.ok(!w.boxes.some(b=>spawn.x>b.min.x-.32&&spawn.x<b.max.x+.32&&spawn.z>b.min.z-.32&&spawn.z<b.max.z+.32&&b.max.y>0),JSON.stringify(spawn));assert.ok(findPath(w.nav,spawn,{x:0,z:8}).length>0,'Unreachable spawn '+JSON.stringify(spawn));}w.update(10);w.dispose();});

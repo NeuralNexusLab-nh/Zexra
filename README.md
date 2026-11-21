@@ -1,32 +1,27 @@
 # Zexra
 
-A self-contained, static WebGL arena shooter by NXLabTW. Fast movement, fictional modern firearms, local AI opponents and an industrial arena with daytime and night configurations. The entire interface is in English, with a purple and ice-blue visual identity.
+A fully static browser arena shooter by NXLabTW. English interface, technology-purple identity, keyboard/mouse and touch controls. No account system, database, server functions or external asset CDN.
 
-## Play locally
+## Play
 
-Requires Node.js 20+ for the optional local preview server. There are no npm dependencies to install.
+Open https://neuralnexuslab-nh.github.io/Zexra/ and select **PLAY**. Choose the match size at the top and the game mode below it, then deploy.
 
-```sh
-npm start
-```
+- **Team Deathmatch:** 1v1 through 5v5. You play with AI teammates against an equally sized AI team. First team to 50 eliminations, or the highest team score after five minutes, wins. Friendly fire is disabled. Friendly markers identify your teammates.
+- **Free for All:** the size selector corresponds to 2, 4, 6, 8 or 10 individual combatants. Everyone fights independently. First to 25 eliminations, or the highest score at the time limit, wins.
+- **Dead Signal:** solo zombie survival in **The Hollow**, a separate abandoned cemetery with memorial ruins, fog, moonlight and violet security lights. Waves progressively increase in number, health and movement speed. Infected pursue through cover and attack at melee range after a dodgeable wind-up. Survive an entire wave to restore reserve ammunition, recover health and gain a grenade before the next wave. Death ends the run. Active infected are capped at 18 to bound rendering and navigation costs.
+- **Free Range:** six moving targets, unlimited reserve ammunition and grenade replenishment.
 
-Open **http://localhost:65535**. Click **ENTER ARENA** to capture the mouse and enable audio. If the browser denies pointer lock, a drag-to-look fallback remains available. The game canvas hides the cursor during play; menus restore it. Press Escape to pause and release the mouse. Leave the preview terminal running while playing.
+All participants other than you are local AI. There is no online multiplayer or matchmaking service.
 
-## Static deployment
+## Arsenal
 
-Serve the repository root using any static HTTPS host. For GitHub Pages, choose **Settings → Pages → Deploy from a branch → main → /(root)**. All paths are relative, so project subpaths work. No build, server functions, database, API keys, login or external asset CDN is needed. `tools/serve.mjs` is a development convenience, not a production backend.
+Six freely available primary weapons: **AK-47, VCR2, MP5, AWP, M1 Garand and P90**. Every loadout also includes a P-19 sidearm, tactical knife and two grenades.
 
-## Modes
-
-- **Skirmish:** free-for-all against 3 AI opponents on easy or 5 on standard/elite. First to 25 eliminations, or the highest score after five minutes, wins. Bots also fight each other. Respawn protection ends when firing.
-- **Duel:** one AI opponent, first to five rounds. Each round lasts 90 seconds; timeouts repeat the tied round.
-- **Range:** six moving practice targets, unlimited reserve ammunition and grenade replenishment. Targets respawn and do not attack.
-
-DRYDOCK and NIGHTSHIFT share an industrial site with different lighting and cover arrangements. The central service deck is accessible using stairs. Containers, supply crates and barriers provide cover and jump routes. Navigation and bullet visibility use the same collision boxes as movement.
+The P90 uses a distinct compact bullpup model, a top-mounted 50-round magazine, its own fire rate, recoil and upward magazine-removal animation. The AWP has a clear magnified optic and a bolt-action cycle; the M1 Garand uses an eight-round clip and an empty-clip ping. VCR2 is fictional. Weapon names identify game interpretations, not manufacturer-approved simulations.
 
 ## Controls
 
-| Action | Keyboard / mouse |
+| Action | Input |
 | --- | --- |
 | Move / look | WASD / mouse |
 | Fire / aim | Left / right mouse |
@@ -34,40 +29,43 @@ DRYDOCK and NIGHTSHIFT share an industrial site with different lighting and cove
 | Crouch / slide while sprinting | Ctrl or C |
 | Jump | Space |
 | Reload | R |
-| Primary / pistol / knife | 1 / 2 / 3 or mouse wheel |
-| Grenade | G |
-| Inspect | F |
+| Primary / sidearm / knife | 1 / 2 / 3 or wheel |
+| Grenade / inspect | G / F |
 | Pause | Escape |
 | Full screen | Alt + Enter |
 
-Touch devices get a movement stick, right-side camera drag and action buttons. Full joystick deflection sprints. Touch aim toggles. Landscape is recommended; portrait menus and controls are also laid out independently. Hardware acceleration and WebGL 2 are required. Desktop keyboard and touch inputs are implemented; gamepad input is not implemented.
+Touch devices use the left stick for movement, right-side drag for look and separate action buttons. Full stick deflection sprints. Landscape is recommended; portrait and tablet layouts are included.
 
-## Presentation and performance
+Resume retries mouse capture from the user's click and restores canvas focus. Automatic respawn preserves an existing pointer lock and clears stale deltas without making a new permission request. If the browser rejects capture, free look continues while the pointer is over the canvas, and the next click retries capture. Leaving the tab pauses the game. The canvas cursor is hidden during play and restored in menus.
 
-- Six procedural firearm models: AK-47, VCR2, MP5, AWP, M1 Garand and P-19; tactical knife and grenades. VCR2 is fictional; the other names identify game interpretations rather than manufacturer-approved simulations.
-- ADS, recoil, stance-dependent dispersion, range falloff, headshots, moving magazines/bolts, muzzle flashes, shells and tracer feedback.
-- Procedural concrete, asphalt and steel textures; instanced static geometry, shadow maps, sky gradient, environment reflections and night lighting.
-- Locally synthesized Web Audio effects: distinct weapon reports, mechanical reload sounds, footsteps, grenade blasts, stereo positional sound, cover filtering and short convolution reverberation. These are procedural effects, not field-recorded firearm samples.
-- Adjustable mouse sensitivity, aim sensitivity, touch sensitivity, inverted vertical look, FOV, volume, motion, hit numbers, FPS indicator and three quality presets. Touch defaults to medium quality. Settings are stored locally using localStorage; blocked storage does not prevent play.
-- Fixed 120 Hz movement simulation with bounded catch-up. Frame rate depends on the browser, display, GPU and quality preset; no universal FPS guarantee is made.
+## Local preview and deployment
 
-The game uses original procedural assets rather than production-scanned environments or motion-captured characters. It is a browser arena game, not a commercial AAA production. There is no online multiplayer, account system, leaderboard, Hall of Fame, seasonal scenery, analytics or telemetry. After the static files have loaded, gameplay makes no external requests. Hosting providers may still keep their normal HTTP logs.
+Requires Node.js 20.11+ for the optional preview server. No npm packages are required. On Windows, double-click **Start-Zexra.cmd**, or run:
 
-## Development and checks
+```sh
+npm start
+```
+
+Open **http://localhost:65535**. Keep the server running while playing. The preview server is a development tool; production deployment is completely static.
+
+For GitHub Pages, use **Settings / Pages / Deploy from a branch / main / root**. All asset paths are relative and support project subpaths. Before publishing source changes, run:
 
 ```sh
 npm run check
+node tools/stamp-assets.mjs
 npm test
 ```
 
-Run `node tools/stamp-assets.mjs` after source changes and before uploading. This refreshes content fingerprints in CSS, the entry script and every module import so browsers do not mix old and new files.
+Asset fingerprints cover styles, the entry script and all imported modules, preventing mixed cached versions. An optional offline QA bundle can be created with **node tools/standalone.mjs**; it is excluded from Git.
 
-`scripts/physics.js` contains the renderer-independent collision, line-of-sight and weapon rules. `world.js` builds the arena and navigation graph. `weapons.js` builds the weapon and opponent geometry. `audio.js` synthesizes and spatializes sound. `game.js` owns match state, inputs and rendering. `window.ZEXRA.snapshot` exposes read-only local diagnostics for browser QA.
+## Implementation and limits
 
-`node tools/standalone.mjs` optionally builds an ignored `.qa/preview.html` for manual offline inspection. This is not required for deployment.
+Movement uses a fixed 120 Hz simulation and bounded catch-up. The renderer uses procedural assets, instanced environment geometry, cached static shadow maps and lightweight moving contact shadows. Three quality settings are available. Frame rates depend on hardware, browser and other running applications; a universal 60 FPS target is not guaranteed.
+
+Audio is locally synthesized using Web Audio: gun reports, reload mechanisms, footsteps, spatial infected growls, wind, low horror ambience, grenade blasts and reverberation. These are procedural effects, not field-recorded firearm samples. Models and animations are procedural rather than scanned or motion-captured assets. This is a browser game, not a commercial AAA production.
+
+Preferences stay in localStorage. Blocked local storage does not prevent play. The game sends no telemetry or gameplay data; hosts may retain their ordinary HTTP logs. WebGL and hardware acceleration are required. Gamepad and VR input are not implemented.
 
 ## Attribution
 
-The user's reference was [deathsmile32/rivals-online](https://github.com/deathsmile32/rivals-online). Zexra is an independently written interpretation of the requested arena-shooter direction; the reference repository's code, branding and assets are not included.
-
-The vendored Three.js r160 runtime is MIT-licensed. Its full license is in [vendor/THREE-LICENSE.txt](vendor/THREE-LICENSE.txt). All other game code and procedural assets are original to this project. See [LICENSE](LICENSE).
+The user's original reference was https://github.com/deathsmile32/rivals-online. Zexra is independently written; that repository's code, branding and assets are not included. Three.js r160 is vendored under its MIT license in **vendor/THREE-LICENSE.txt**. All other project code and procedural assets are copyright **NXLabTW**; see **LICENSE**.

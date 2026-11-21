@@ -25,6 +25,17 @@ export function createWeapon(id='carbine',hands=true){
   box(M.rubber,0,-.02,.05,.075,.085,.34);box(M.metal,0,-.01,-.15,.15,.045,.045);
   const shape=new T.Shape();shape.moveTo(-.04,0);shape.lineTo(.045,0);shape.lineTo(.045,.38);shape.lineTo(0,.52);shape.lineTo(-.04,.36);shape.closePath();const geometry=new T.ExtrudeGeometry(shape,{depth:.012,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.004,bevelThickness:.003});const blade=new T.Mesh(geometry,M.steel);blade.rotation.x=-Math.PI/2;blade.position.set(0,0,-.17);root.add(blade);root.userData.extraGeometry=geometry;
   muzzle=-.7;
+ }else if(id==='p90'){
+  // Compact bullpup body, thumbhole stock and horizontal top-mounted magazine.
+  box(M.polymer,0,-.015,-.22,.17,.16,.69);box(M.polymer,0,-.12,.03,.16,.12,.20);box(M.rubber,0,-.005,.14,.18,.27,.05);
+  box(M.polymer,0,-.14,-.43,.15,.15,.12);box(M.polymer,0,-.24,-.17,.13,.05,.38);
+  const grip=box(M.polymer,0,-.17,-.12,.10,.21,.10);grip.rotation.x=-.17;
+  box(M.steel,0,.107,-.22,.145,.065,.52,mag);box(M.glass,0,.145,-.22,.13,.025,.50,mag);
+  for(let z=-.44;z<.01;z+=.025)cyl(M.brass,0,.15,z,.012,.09,mag).rotation.z=Math.PI/2;
+  box(M.dark,0,.20,-.31,.11,.05,.25);const optic=new T.Mesh(new T.TorusGeometry(.048,.009,6,16),M.dark);optic.position.set(0,.265,-.35);root.add(optic);root.userData.ringGeometry=optic.geometry;
+  part(geometries.sphere,M.red,0,.265,-.344,.002,.002,.002);cyl(clearOptic,0,.265,-.35,.039,.002);
+  cyl(M.metal,0,.01,-.64,.025,.17);cyl(M.dark,0,.01,-.735,.032,.05);box(M.steel,.09,.025,-.35,.012,.035,.07,bolt);
+  muzzle=-.76;sightY=.265;
  }else if(id==='pistol'){
   box(M.polymer,0,-.035,-.04,.105,.13,.31);box(M.metal,0,.055,-.1,.12,.095,.37,bolt);box(M.dark,0,.109,-.18,.075,.009,.18,bolt);
   const grip=box(M.polymer,0,-.17,.055,.1,.23,.13);grip.rotation.x=-.24;box(M.rubber,0,-.285,.085,.115,.025,.14,mag);
@@ -76,8 +87,8 @@ export function createWeapon(id='carbine',hands=true){
  if(hands){
   const right=box(M.glove,.035,-.22,id==='pistol'?.07:.02,.12,.13,.13);right.rotation.x=-.2;
   const forearm=box(M.sleeve,.11,-.39,.22,.15,.35,.17);forearm.rotation.x=-.45;forearm.rotation.z=.28;
-  const left=box(M.glove,-.02,-.105,id==='pistol'?-.13:id==='knife'?.15:-.62,.135,.12,.17);left.rotation.z=.18;
-  const forearm2=box(M.sleeve,-.12,-.3,id==='pistol'?-.04:id==='knife'?.28:-.43,.15,.37,.17);forearm2.rotation.z=-.35;forearm2.rotation.x=-.7;
+  const left=box(M.glove,-.02,-.105,id==='pistol'?-.13:id==='knife'?.15:id==='p90'?-.43:-.62,.135,.12,.17);left.rotation.z=.18;
+  const forearm2=box(M.sleeve,-.12,-.3,id==='pistol'?-.04:id==='knife'?.28:id==='p90'?-.25:-.43,.15,.37,.17);forearm2.rotation.z=-.35;forearm2.rotation.x=-.7;
   supportArm=new T.Group();root.add(supportArm);supportArm.add(left,forearm2);
   for(let i=0;i<4;i++)box(M.rubber,.095,-.23+i*.018,.015,.012,.012,.07);
  }
@@ -87,9 +98,9 @@ export function createWeapon(id='carbine',hands=true){
  root.userData={...root.userData,muzzle,sightY,mag,bolt,flash,light,supportArm,dispose(){flashGeo.dispose();flashMat.dispose();root.userData.extraGeometry?.dispose();root.userData.ringGeometry?.dispose();}};
  return root;
 }
-export function createSoldier(index=0){
+export function createSoldier(index=0,friendly=false){
  const group=new T.Group(),limbs=[];
- const cloth=new T.MeshStandardMaterial({color:[0x6b7361,0x7f6f58,0x4d6670,0x746e63,0x566658][index%5],roughness:1}),armor=materials.polymer;
+ const cloth=new T.MeshStandardMaterial({color:friendly?0x7b82ad:[0x6b7361,0x7f6f58,0x4d6670,0x746e63,0x566658][index%5],roughness:1}),armor=materials.polymer;
  function limb(x,y,z,w,h,d,m=cloth){const rounded=m===cloth;const mesh=new T.Mesh(rounded?limbGeometry:geometries.box,m);mesh.position.set(x,y,z);mesh.scale.set(w,rounded?h*.5:h,d);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;}
  limb(0,1.15,0,.5,.62,.28);limb(0,1.22,-.17,.42,.42,.1,armor);limb(0,.87,0,.4,.18,.3,materials.dark);
  for(const x of [-.105,.105]){const leg=new T.Group();leg.position.set(x,.82,0);const thigh=new T.Mesh(limbGeometry,cloth);thigh.scale.set(.17,.31,.2);thigh.position.y=-.31;thigh.castShadow=true;leg.add(thigh);const boot=new T.Mesh(geometries.box,materials.rubber);boot.scale.set(.18,.16,.3);boot.position.set(0,-.72,-.05);leg.add(boot);group.add(leg);limbs.push(leg);}
@@ -103,4 +114,18 @@ export function createSoldier(index=0){
  group.traverse(o=>{if(o.isMesh)o.castShadow=false;});
  const shadow=new T.Mesh(contactShadowGeometry,contactShadowMaterial);shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;group.add(shadow);
  return{group,limbs,head,flash,dispose(){cloth.dispose();head.geometry.dispose();flash.geometry.dispose();flash.material.dispose();mergedGeometry.dispose();}};
+}
+export function createZombie(index=0){
+ const group=new T.Group(),limbs=[],arms=[];
+ const skin=new T.MeshStandardMaterial({color:index%2?0x7d8476:0x879187,roughness:1}),rags=new T.MeshStandardMaterial({color:index%3?0x45424e:0x4f5a4e,roughness:1});
+ const part=(x,y,z,w,h,d,material=skin,parent=group)=>{const p=new T.Mesh(limbGeometry,material);p.position.set(x,y,z);p.scale.set(w,h*.5,d);parent.add(p);return p;};
+ part(0,1.13,0,.48,.65,.26,rags);part(0,1.58,0,.29,.40,.29);part(0,1.48,-.13,.22,.13,.07,materials.dark);
+ for(const side of [-1,1]){const leg=new T.Group();leg.position.set(side*.12,.82,0);part(0,-.34,0,.16,.68,.18,rags,leg);part(0,-.74,-.05,.18,.16,.27,materials.rubber,leg);group.add(leg);limbs.push(leg);
+  const arm=new T.Group();arm.position.set(side*.28,1.36,-.01);part(0,-.28,0,.13,.56,.15,skin,arm);part(0,-.56,-.02,.13,.12,.19,skin,arm);arm.rotation.x=-1.15;group.add(arm);arms.push(arm);
+ }
+ const merged=mergeSoldierParts(group,null);const eyeMaterial=new T.MeshBasicMaterial({color:0xc3a1ff});
+ for(const x of [-.065,.065]){const e=new T.Mesh(geometries.sphere,eyeMaterial);e.scale.set(.022,.014,.018);e.position.set(x,1.66,-.143);group.add(e);}
+ const shadow=new T.Mesh(contactShadowGeometry,contactShadowMaterial);shadow.rotation.x=-Math.PI/2;shadow.position.y=.02;group.add(shadow);
+ const flash=new T.Group();group.add(flash);flash.visible=false;
+ return{group,limbs,arms,flash,zombie:true,dispose(){merged.dispose();skin.dispose();rags.dispose();eyeMaterial.dispose();}};
 }
