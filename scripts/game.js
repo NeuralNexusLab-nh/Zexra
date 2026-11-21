@@ -51,7 +51,7 @@ function initUI(){
  $('launch').onclick=startMatch;$('playNav').onclick=()=>{$('launch').focus();};
  $('armoryBtn').onclick=$('changeWeapon').onclick=()=>openDialog('armoryDialog');$('settingsBtn').onclick=()=>openSettings();$('controlsBtn').onclick=()=>openDialog('controlsDialog');
  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
- $('pauseBtn').onclick=pause;$('resume').onclick=resume;$('restart').onclick=startMatch;$('pauseSettings').onclick=()=>openSettings();$('quit').onclick=showMenu;
+ $('pauseBtn').hidden=true;document.body.appendChild($('pauseBtn'));$('pauseBtn').onclick=pause;$('resume').onclick=resume;$('restart').onclick=startMatch;$('pauseSettings').onclick=()=>openSettings();$('quit').onclick=showMenu;
  $('playAgain').onclick=startMatch;$('resultMenu').onclick=showMenu;
  document.querySelectorAll('dialog').forEach(d=>d.addEventListener('cancel',e=>{if(d.id==='pauseDialog'){e.preventDefault();resume();}}));
  for(const id of ['sens','adsSens','touchSens','invertY','fov','volume','quality','motion','numbers','showFps']){
@@ -261,6 +261,7 @@ function tick(dt){
 }
 function updateHUD(){
  if(!initialized)return;
+ $('pauseBtn').hidden=state!=='running';
  $('health').textContent=Math.ceil(player.hp);$('healthBar').style.width=player.hp+'%';$('healthBar').style.background=player.hp<30?'#ef9378':'#80d5ff';
  const w=gunConfig(),inv=inventory[selectedSlot];$('ammo').textContent=selectedSlot===2?'—':inv?.ammo??w.mag;$('reserve').textContent=selectedSlot===2?'—':mode==='range'?'∞':inv?.reserve??w.reserve;
  $('ammo').style.color=inv?.ammo<=5?'#f3a187':'';$('weaponName').textContent=w.name+' / '+(selectedSlot===2?'MELEE':w.caliber);$('grenades').textContent=player.grenades;

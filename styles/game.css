@@ -11,3 +11,5 @@
 button.primary{background:linear-gradient(110deg,#b49aff,#78d8ff);border-color:#b49aff;color:#11172e}button.primary:hover{background:linear-gradient(110deg,#c7b4ff,#a3e6ff)}.hero h1 span{color:#82d9ff}.brand svg{fill:#80d5ff}.mode.selected{border-color:#93baff;background:linear-gradient(110deg,#9c76ff30,#151e3ddd)}.mode.selected:after{background:linear-gradient(#b49aff,#78d8ff)}.health-track i{background:#80d5ff}.match b{color:#80d5ff;border-color:#80d5ff}.weapon-caption{right:5vw}.weapon-caption small{color:#8fdcff}#crosshair{color:#f0f3ff}.hero h1{font-weight:900;letter-spacing:-2px}.control-grid{grid-template-columns:1fr 1.2fr}.stat{letter-spacing:.3px}.weapon-card .stat{grid-template-columns:70px 1fr}.touch-fire{background:#7254d078!important}.touch-aim{border-color:#7bd4ff99!important}@media(max-width:600px){.hero h1{font-size:40px}.control-grid{font-size:11px}.mode small{font-size:11px}}
 
 body.playing #game,body.playing #hud{cursor:none}body.playing #hud button{cursor:pointer}body.playing #touch{cursor:none}
+
+#pauseBtn{position:fixed;z-index:20}body.touch #pauseBtn{top:15px;right:15px}
