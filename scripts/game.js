@@ -13,7 +13,7 @@ let state='menu',mode='skirmish',map='dock',difficulty='normal',primary=settings
 const player=makeBody(-22,-22);Object.assign(player,{hp:100,kills:0,deaths:0,heads:0,shots:0,hits:0,alive:true,invulnerable:0,grenades:2});
 let yaw=0,pitch=0,lookX=0,lookY=0,ads=0,recoil=0,recoilYaw=0,gunKick=0,reload=0,reloadStage=0,nextFire=0,inspect=0,firePressed=false,aimPressed=false,lastFire=false,weaponSwap=0;
 let inventory=[],bots=[],effects=[],grenades=[],time=300,clock=0,round=1,roundPause=0,respawn=0,announcementTime=0,killNoticeTime=0,hitTime=0,damageTime=0,footDistance=0,bob=0,eyeHeight=1.63;
-let lastFrame=performance.now(),accumulator=0,fpsFrames=0,fpsTime=0,fps=60,hudTimer=0,menuTime=0,renderFrames=0,pointerError='';
+let lastFrame=performance.now(),accumulator=0,fpsFrames=0,fpsTime=0,fps=60,hudTimer=0,menuTime=0,renderFrames=0,pointerError='',hadPointerLock=false,dragLook=false;
 const keys=new Set(),touchMove={x:0,z:0};let touchAim=false,throwRequested=false,jumpQueued=false,slideQueued=false,aimMode=false;
 const names=['VIPER','ROOK','NOMAD','ECHO','GHOST'];
 const diffConfig={easy:{speed:3.4,reaction:.9,spread:.085,interval:.23,count:3},normal:{speed:4.4,reaction:.48,spread:.048,interval:.16,count:5},hard:{speed:5.3,reaction:.28,spread:.026,interval:.12,count:5}};
@@ -25,7 +25,7 @@ function saveSettings(){try{localStorage.setItem('zexra.settings.v1',JSON.string
 function fail(e){console.error(e);$('boot').hidden=true;$('fatal').hidden=false;$('fatalText').textContent='3D 遊戲啟動失敗：'+e.message+'。請確認 WebGL 與硬體加速已開啟。';}
 function setup(){
  try{
-  renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance',alpha:false});renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.autoClear=false;
+  renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance',alpha:false});renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.autoClear=false;renderer.info.autoReset=false;
   camera=new T.PerspectiveCamera(settings.fov,innerWidth/innerHeight,.06,220);camera.rotation.order='YXZ';
   viewScene=new T.Scene();viewCamera=new T.PerspectiveCamera(65,innerWidth/innerHeight,.01,12);viewScene.add(new T.HemisphereLight(0xc6e2ed,0x5b6350,2.4));const keyLight=new T.DirectionalLight(0xffe5b9,3.5);keyLight.position.set(-2,3,1);viewScene.add(keyLight);viewScene.add(flashLight);
   loadWorld(map);equip(0);applyQuality();resize();initUI();initialized=true;$('boot').hidden=true;$('menu').hidden=false;requestAnimationFrame(frame);
@@ -67,8 +67,8 @@ function renderArmory(){
 }
 function openDialog(id){$(id).showModal();}function openSettings(){openDialog('settingsDialog');}
 function closeDialogs(){document.querySelectorAll('dialog[open]').forEach(d=>d.close());}
-function clearInput(){keys.clear();touchMove.x=touchMove.z=0;firePressed=aimPressed=touchAim=false;jumpQueued=slideQueued=throwRequested=false;lookX=lookY=0;lastFire=false;}
-async function lockPointer(){if(touch)return;try{await canvas.requestPointerLock();pointerError='';}catch(e){pointerError=e.message;pause();announce('點擊繼續遊戲','瀏覽器需要你的點擊才能鎖定滑鼠。',3);}}
+function clearInput(){keys.clear();touchMove.x=touchMove.z=0;firePressed=aimPressed=touchAim=dragLook=false;jumpQueued=slideQueued=throwRequested=false;lookX=lookY=0;lastFire=false;}
+async function lockPointer(){if(touch)return;try{await canvas.requestPointerLock();pointerError='';$('pointerHint').hidden=true;}catch(e){pointerError=e.message;$('pointerHint').hidden=false;}}
 async function startMatch(){
  closeDialogs();clearInput();state='running';map=$('mapSelect').value;difficulty=$('difficulty').value;
  if(world.night!==(map==='night')){loadWorld(map);applyQuality();}else{clearEffects();for(const b of bots){world.scene.remove(b.model.group);b.model.dispose();}bots=[];}
@@ -260,7 +260,7 @@ function updateView(dt){
  const w=gunConfig();camera.fov=damp(camera.fov,settings.fov+(w.zoom-settings.fov)*ads,13,dt);camera.updateProjectionMatrix();
  if(state==='menu'){
   menuTime+=dt;camera.position.set(-16+Math.sin(menuTime*.07)*1.5,5.3,20);camera.lookAt(3,2,-6);
-  viewCamera.fov=52;viewCamera.updateProjectionMatrix();gun.position.set(innerWidth<700?.25:.44,-.03,-1.3);gun.rotation.set(.13+Math.sin(menuTime*.5)*.015,-.52,.18);gun.scale.setScalar(1.05);gun.visible=innerWidth>600;gun.userData.flash.visible=false;gun.userData.light.intensity=0;return;
+  viewCamera.fov=52;viewCamera.updateProjectionMatrix();gun.position.set(.38,-.02,-1.6);gun.rotation.set(.08+Math.sin(menuTime*.5)*.015,-1.05,-.08);gun.scale.setScalar(.85);gun.visible=innerWidth>600;gun.userData.flash.visible=false;gun.userData.light.intensity=0;return;
  }
  gun.visible=player.alive;gun.scale.setScalar(1);viewCamera.fov=65;viewCamera.updateProjectionMatrix();
  camera.position.set(player.x,player.y+eyeHeight,player.z);camera.rotation.set(-pitch-recoil,yaw+recoilYaw,0,'YXZ');
@@ -287,15 +287,15 @@ function frame(now){
   accumulator+=dt;let steps=0;while(accumulator>=1/120&&steps<10&&state==='running'){tick(1/120);accumulator-=1/120;steps++;}
  }else accumulator=0;
  if(state==='running'||state==='menu')updateView(dt);lookX=lookY=0;
- renderer.clear();renderer.render(world.scene,camera);renderer.clearDepth();renderer.render(viewScene,viewCamera);renderFrames++;
+ renderer.info.reset();renderer.clear();renderer.render(world.scene,camera);renderer.clearDepth();renderer.render(viewScene,viewCamera);renderFrames++;
  hudTimer+=dt;if(hudTimer>.06){updateHUD();hudTimer=0;}
  requestAnimationFrame(frame);
 }
-document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&state==='running'&&!touch)pause();});
-document.addEventListener('pointerlockerror',()=>{pointerError='Pointer lock denied';if(state==='running'&&!touch)pause();});
-document.addEventListener('mousemove',e=>{if(state==='running'&&document.pointerLockElement===canvas){lookX+=e.movementX;lookY+=e.movementY;}});
-canvas.addEventListener('mousedown',e=>{if(state!=='running'||touch)return;if(document.pointerLockElement!==canvas){lockPointer();return;}if(e.button===0)firePressed=true;if(e.button===2)aimPressed=true;});
-document.addEventListener('mouseup',e=>{if(e.button===0)firePressed=false;if(e.button===2)aimPressed=false;});canvas.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('pointerlockchange',()=>{const locked=document.pointerLockElement===canvas;if(locked){hadPointerLock=true;$('pointerHint').hidden=true;}else if(hadPointerLock){hadPointerLock=false;if(state==='running'&&!touch)pause();}});
+document.addEventListener('pointerlockerror',()=>{pointerError=pointerError||'Pointer lock denied';if(!touch)$('pointerHint').hidden=false;});
+document.addEventListener('mousemove',e=>{if(state==='running'&&(document.pointerLockElement===canvas||dragLook)){lookX+=e.movementX;lookY+=e.movementY;}});
+canvas.addEventListener('mousedown',e=>{if(state!=='running'||touch)return;if(document.pointerLockElement!==canvas){dragLook=true;if(!pointerError)lockPointer();}if(e.button===0)firePressed=true;if(e.button===2)aimPressed=true;});
+document.addEventListener('mouseup',e=>{dragLook=false;if(e.button===0)firePressed=false;if(e.button===2)aimPressed=false;});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('keydown',e=>{
  if(e.code==='Escape'){if(state==='running')pause();return;}
  if(state!=='running'||document.querySelector('dialog[open]'))return;
