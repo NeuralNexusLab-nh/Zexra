@@ -1,6 +1,8 @@
 const T=window.THREE;
 const materials={metal:new T.MeshStandardMaterial({color:0x344049,roughness:.38,metalness:.88}),dark:new T.MeshStandardMaterial({color:0x141e24,roughness:.58,metalness:.42}),polymer:new T.MeshStandardMaterial({color:0x303a36,roughness:.86,metalness:.05}),tan:new T.MeshStandardMaterial({color:0x827957,roughness:.87,metalness:.05}),steel:new T.MeshStandardMaterial({color:0x727f81,roughness:.3,metalness:.92}),rubber:new T.MeshStandardMaterial({color:0x1b2425,roughness:.94}),glove:new T.MeshStandardMaterial({color:0x3d4b45,roughness:1}),sleeve:new T.MeshStandardMaterial({color:0x657365,roughness:1}),glass:new T.MeshStandardMaterial({color:0x275963,roughness:.1,metalness:.7,transparent:true,opacity:.62}),red:new T.MeshBasicMaterial({color:0xf96d4d}),brass:new T.MeshStandardMaterial({color:0xbca256,roughness:.35,metalness:.8})};
-const geometries={box:new T.BoxGeometry(1,1,1),cyl:new T.CylinderGeometry(1,1,1,12),sphere:new T.SphereGeometry(1,12,8)};
+const bevelShape=new T.Shape();bevelShape.moveTo(-.465,-.465);bevelShape.lineTo(.465,-.465);bevelShape.lineTo(.465,.465);bevelShape.lineTo(-.465,.465);bevelShape.closePath();
+const bevelBox=new T.ExtrudeGeometry(bevelShape,{depth:.93,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.035,bevelThickness:.035});bevelBox.translate(0,0,-.465);
+const geometries={box:bevelBox,cyl:new T.CylinderGeometry(1,1,1,16),sphere:new T.SphereGeometry(1,12,8)};
 const limbGeometry=new T.CapsuleGeometry(.5,1,3,8);
 export function createWeapon(id='carbine',hands=true){
  const root=new T.Group();root.userData.id=id;
@@ -25,7 +27,7 @@ export function createWeapon(id='carbine',hands=true){
   const smg=id==='smg',sniper=id==='marksman',shotgun=id==='shotgun';muzzle=sniper?-1.48:shotgun?-1.32:smg?-.87:-1.18;
   box(M.metal,0,.012,-.18,.125,.17,.47);box(M.polymer,0,-.07,-.1,.12,.07,.4);box(M.dark,0,.108,-.27,.115,.025,.6);
   // Buffer tube, cheek rest, buttpad, angled pistol grip.
-  cyl(M.metal,0,.005,.24,.035,.34);box(smg?M.polymer:M.tan,0,-.005,.34,.13,.18,.28);box(M.rubber,0,-.02,.49,.145,.23,.04);
+  cyl(M.metal,0,.005,.24,.035,.34);box(smg?M.polymer:M.tan,0,.028,.34,.12,.105,.28);box(smg?M.polymer:M.tan,0,-.085,.40,.10,.045,.15);box(M.rubber,0,-.02,.49,.135,.23,.04);
   const grip=box(M.polymer,0,-.19,.008,.095,.22,.11);grip.rotation.x=-.28;
   box(M.metal,0,-.16,-.13,.08,.018,.15);box(M.metal,0,-.11,-.205,.025,.12,.02);
   // Magazine, chamber and bolt cover are independently animated.
