@@ -3,7 +3,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 const root=resolve(import.meta.dirname,'..');
 const read=p=>readFile(resolve(root,p),'utf8');
-const files=['physics','rules','input','world','horror','weapons','audio','game'];let code='';
+const files=['physics','rules','handling','input','world','horror','weapons','audio','game'];let code='';
 for(const file of files){let source=await read(`scripts/${file}.js`);source=source.replace(/^import .*?;\r?\n/gm,'').replace(/^export /gm,'');if(file!=='physics')source=source.replace(/^const T=window.THREE;\r?\n/,'');if(file==='weapons')source=source.replace(/\bmaterials\b/g,'weaponMaterials').replace(/\bgeometries\b/g,'weaponGeometries');if(file==='game')source=source.replace('const T=window.THREE,$=','const $=');code+=source+'\n';}
 let html=await read('index.html');
 for(const name of ['game','optics','operations']){const css=await read(`styles/${name}.css`);html=html.replace(new RegExp(`<link rel="stylesheet" href="styles/${name}\\.css[^\"]*">`),()=>`<style>${css}</style>`);}

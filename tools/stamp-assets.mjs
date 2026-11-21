@@ -4,7 +4,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {resolve} from 'node:path';
 const root=resolve(import.meta.dirname,'..'),hash=s=>createHash('sha256').update(s).digest('hex').slice(0,12),hashes={};
-for(const name of ['physics','rules','input','audio','weapons','horror','world','game']){
+for(const name of ['physics','rules','handling','input','audio','weapons','horror','world','game']){
  const path=resolve(root,`scripts/${name}.js`);let text=await readFile(path,'utf8');
  text=text.replace(/from '\.\/(\w+)\.js(?:\?[^']*)?';/g,(match,dep)=>`from './${dep}.js?asset=${hashes[dep]}';`);
  hashes[name]=hash(text);await writeFile(path,text);

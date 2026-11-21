@@ -13,90 +13,102 @@ function mergeSoldierParts(group,exclude){
  for(const mesh of [...group.children]){if(!mesh.isMesh||mesh===exclude)continue;mesh.updateMatrix();let geo=mesh.geometry.clone().applyMatrix4(mesh.matrix);if(geo.index){const indexed=geo;geo=geo.toNonIndexed();indexed.dispose();}const p=geo.attributes.position,n=geo.attributes.normal,c=mesh.material.color;for(let i=0;i<p.count;i++){positions.push(p.getX(i),p.getY(i),p.getZ(i));normals.push(n.getX(i),n.getY(i),n.getZ(i));colors.push(c.r,c.g,c.b);}geo.dispose();group.remove(mesh);}
  const merged=new T.BufferGeometry();merged.setAttribute('position',new T.Float32BufferAttribute(positions,3));merged.setAttribute('normal',new T.Float32BufferAttribute(normals,3));merged.setAttribute('color',new T.Float32BufferAttribute(colors,3));const mesh=new T.Mesh(merged,soldierMaterial);mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);return merged;
 }
-export function createWeapon(id='carbine',hands=true){
- const root=new T.Group();root.userData.id=id;
+export function createWeapon(id='ak47',hands=true){
+ const root=new T.Group(),owned=[];root.userData.id=id;
+ const M=materials,mag=new T.Group(),bolt=new T.Group();root.add(mag,bolt);
  const part=(geo,m,x,y,z,w,h,d,parent=root)=>{const mesh=new T.Mesh(geo,m);mesh.position.set(x,y,z);mesh.scale.set(w,h,d);parent.add(mesh);return mesh;};
- const box=(m,x,y,z,w,h,d,parent)=>part(geometries.box,m,x,y,z,w,h,d,parent);
+ const box=(m,x,y,z,w,h,d,parent=root)=>part(geometries.box,m,x,y,z,w,h,d,parent);
  const cyl=(m,x,y,z,r,length,parent=root)=>{const p=part(geometries.cyl,m,x,y,z,r,length,r,parent);p.rotation.x=Math.PI/2;return p;};
- const M=materials;
- const mag=new T.Group(),bolt=new T.Group();root.add(mag,bolt);
- let muzzle=-1.12,sightY=.15;
+ // Side profiles are extruded across the receiver width, preserving each silhouette.
+ function profile(points,width,material,parent=root,holes=[]){
+  const shape=new T.Shape();points.forEach(([z,y],i)=>i?shape.lineTo(-z,y):shape.moveTo(-z,y));shape.closePath();
+  for(const points of holes){const hole=new T.Path();points.forEach(([z,y],i)=>i?hole.lineTo(-z,y):hole.moveTo(-z,y));hole.closePath();shape.holes.push(hole);}
+  const geo=new T.ExtrudeGeometry(shape,{depth:width,bevelEnabled:true,bevelSize:.006,bevelThickness:.005,bevelSegments:2,steps:1});owned.push(geo);
+  const mesh=new T.Mesh(geo,material);mesh.rotation.y=Math.PI/2;mesh.position.x=-width/2;parent.add(mesh);return mesh;
+ }
+ let muzzle=-1.12,sightY=.25;
+ const barrel=(end,start=-.48,r=.023)=>{cyl(M.steel,0,.018,(start+end)/2,r,Math.abs(start-end));cyl(M.dark,0,.018,end+.035,r*1.35,.08);cyl(M.rubber,0,.018,end-.009,r*.75,.006);muzzle=end-.015;};
+ const grip=(z=.02,m=M.polymer)=>{const p=box(m,0,-.19,z,.09,.23,.11);p.rotation.x=-.25;box(M.dark,0,-.145,z-.10,.075,.016,.14);box(M.dark,0,-.10,z-.17,.018,.10,.02);};
+ const charging=(x=.08,z=-.15)=>{box(M.steel,x,.03,z,.012,.05,.13,bolt);box(M.dark,x*1.35,.025,z+.04,.065,.025,.025,bolt);};
+ const rail=(start,end,height=.14)=>{box(M.dark,0,height-.015,(start+end)/2,.10,.025,Math.abs(start-end));for(let z=start;z>end;z-=.035)box(M.metal,0,height+.005,z,.115,.015,.014);};
+ const rectOptic=(z=-.26,y=.255)=>{
+  box(M.dark,0,y-.08,z,.12,.045,.17);box(M.dark,-.093,y,z,.018,.12,.07);box(M.dark,.093,y,z,.018,.12,.07);
+  box(M.dark,0,y+.059,z,.20,.016,.07);box(M.dark,0,y-.059,z,.20,.016,.07);
+  box(clearOptic,0,y,z-.025,.169,.098,.002);const dot=part(geometries.sphere,M.red,0,y,z+.012,.0022,.0022,.0022);dot.renderOrder=12;
+  box(M.dark,.116,y-.025,z,.035,.05,.055);sightY=y;root.userData.optic='rectangular-red-dot';
+ };
+ const scope=(z=-.4,y=.28)=>{
+  for(const at of [z-.14,z+.13]){box(M.dark,0,y-.09,at,.09,.12,.065);cyl(M.dark,0,y,at,.065,.04);}
+  cyl(M.metal,0,y,z,.049,.48);cyl(M.dark,0,y,z-.27,.084,.13);cyl(M.glass,0,y,z-.34,.072,.004);cyl(M.dark,0,y,z+.26,.069,.105);cyl(M.glass,0,y,z+.315,.057,.004);
+  box(M.dark,0,y+.07,z,.07,.06,.075);box(M.dark,.07,y,z,.07,.07,.075);sightY=y;root.userData.optic='magnified';
+ };
  if(id==='knife'){
   box(M.rubber,0,-.02,.05,.075,.085,.34);box(M.metal,0,-.01,-.15,.15,.045,.045);
-  const shape=new T.Shape();shape.moveTo(-.04,0);shape.lineTo(.045,0);shape.lineTo(.045,.38);shape.lineTo(0,.52);shape.lineTo(-.04,.36);shape.closePath();const geometry=new T.ExtrudeGeometry(shape,{depth:.012,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.004,bevelThickness:.003});const blade=new T.Mesh(geometry,M.steel);blade.rotation.x=-Math.PI/2;blade.position.set(0,0,-.17);root.add(blade);root.userData.extraGeometry=geometry;
-  muzzle=-.7;
+  profile([[-.17,-.025],[-.68,-.025],[-.80,0],[-.64,.035],[-.17,.035]],.015,M.steel);muzzle=-.8;
+ }else if(id==='ak47'){
+  profile([[.50,.06],[.21,.075],[.08,-.04],[.17,-.17],[.49,-.18]],.12,woodMaterial);box(M.rubber,0,-.06,.51,.13,.25,.025);
+  box(M.metal,0,-.025,-.18,.125,.15,.47);cyl(M.dark,0,.055,-.18,.063,.44);grip(.01,woodMaterial);
+  profile([[-.40,.05],[-.83,.035],[-.85,-.07],[-.41,-.10]],.115,woodMaterial);cyl(M.dark,0,.085,-.70,.025,.42);
+  profile([[-.30,-.08],[-.15,-.08],[-.13,-.23],[-.04,-.43],[-.13,-.48],[-.25,-.30]],.09,M.dark,mag);
+  for(let i=0;i<4;i++)box(M.metal,.047,-.20-i*.05,-.20+i*.02,.006,.035,.105,mag);
+  barrel(-1.16,-.8);charging();rail(-.08,-.42,.13);rectOptic(-.25,.25);
+ }else if(id==='vcr2'){
+  // VCR-2: rear magazine and chamber, high continuous rail, short bullpup fore-end.
+  profile([[.44,.10],[-.72,.10],[-.80,-.03],[-.60,-.12],[.04,-.11],[.17,-.24],[.43,-.20]],.16,M.polymer);
+  box(M.rubber,0,-.045,.455,.17,.32,.035);box(M.dark,0,.045,.19,.17,.08,.27);grip(-.27);
+  profile([[.25,-.09],[.10,-.09],[.08,-.39],[.22,-.40]],.095,M.dark,mag);
+  for(let i=0;i<5;i++)box(M.polymer,.05,-.18-i*.035,.17,.008,.017,.12,mag);
+  for(let z=-.43;z>-.74;z-=.055){box(M.dark,.084,-.015,z,.006,.055,.027);box(M.dark,-.084,-.015,z,.006,.055,.027);}
+  rail(.36,-.76,.16);barrel(-.98,-.73);charging(-.09,-.49);rectOptic(-.32,.285);
+ }else if(id==='mp5'){
+  cyl(M.metal,0,.015,-.25,.062,.50);box(M.dark,0,-.055,-.20,.11,.10,.35);grip(.005);
+  for(const x of [-.069,.069])cyl(M.steel,x,.01,.22,.012,.51);box(M.rubber,0,-.055,.48,.13,.23,.035);
+  profile([[-.41,.055],[-.70,.025],[-.75,-.045],[-.67,-.10],[-.43,-.09]],.13,M.polymer);
+  profile([[-.32,-.08],[-.23,-.08],[-.22,-.24],[-.14,-.40],[-.22,-.43],[-.31,-.26]],.065,M.dark,mag);
+  cyl(M.steel,0,.098,-.48,.018,.38);box(M.dark,-.09,.10,-.54,.06,.024,.03,bolt);charging();barrel(-.86,-.69);rail(-.05,-.41,.12);rectOptic(-.23,.24);
+ }else if(id==='awp'){
+  const green=new T.MeshStandardMaterial({color:0x54704b,roughness:.85});owned.push(green);
+  profile([[.53,.025],[.15,.055],[-.82,-.05],[-.82,-.14],[-.05,-.16],[.04,-.31],[.14,-.30],[.21,-.15],[.50,-.21]],.135,green,root,[[[.15,-.075],[.30,-.075],[.34,-.16],[.23,-.19]]]);
+  box(M.rubber,0,-.09,.55,.145,.29,.035);box(green,0,.05,.37,.14,.065,.23);cyl(M.metal,0,.062,-.24,.052,.62);
+  box(M.dark,0,-.23,-.29,.095,.16,.15,mag);cyl(M.steel,.085,.04,-.03,.012,.14,bolt).rotation.z=Math.PI/2;part(geometries.sphere,M.dark,.15,.02,-.03,.035,.035,.035,bolt);
+  for(const x of [-.07,.07])cyl(M.dark,x,-.16,-.72,.012,.40);barrel(-1.43,-.57,.033);scope(-.38,.265);
+ }else if(id==='garand'){
+  profile([[.58,.035],[.28,.03],[.09,-.04],[-.88,-.045],[-1.03,-.01],[-1.03,-.075],[-.45,-.145],[.06,-.145],[.25,-.23],[.57,-.23]],.125,woodMaterial);
+  box(M.steel,0,.025,-.24,.115,.09,.43);box(M.dark,0,.076,-.21,.065,.012,.16);box(M.rubber,0,-.095,.59,.13,.29,.022);
+  box(M.steel,.076,.055,-.23,.025,.025,.17,bolt);box(M.dark,.10,.052,-.15,.055,.026,.025,bolt);
+  for(let i=0;i<4;i++)for(const x of [-.018,.018]){cyl(M.brass,x,.105,-.16-i*.021,.010,.07,mag).rotation.x=0;}box(M.dark,0,.08,-.19,.058,.025,.11,mag);mag.visible=false;
+  for(const z of [-.72,-.97])box(M.steel,0,-.02,z,.14,.105,.025);barrel(-1.40,-.94);rail(-.05,-.37,.125);rectOptic(-.21,.25);
  }else if(id==='p90'){
-  // Compact bullpup body, thumbhole stock and horizontal top-mounted magazine.
-  box(M.polymer,0,-.015,-.22,.17,.16,.69);box(M.polymer,0,-.12,.03,.16,.12,.20);box(M.rubber,0,-.005,.14,.18,.27,.05);
-  box(M.polymer,0,-.14,-.43,.15,.15,.12);box(M.polymer,0,-.24,-.17,.13,.05,.38);
-  const grip=box(M.polymer,0,-.17,-.12,.10,.21,.10);grip.rotation.x=-.17;
-  box(M.steel,0,.107,-.22,.145,.065,.52,mag);box(M.glass,0,.145,-.22,.13,.025,.50,mag);
-  for(let z=-.44;z<.01;z+=.025)cyl(M.brass,0,.15,z,.012,.09,mag).rotation.z=Math.PI/2;
-  box(M.dark,0,.20,-.31,.11,.05,.25);const optic=new T.Mesh(new T.TorusGeometry(.048,.009,6,16),M.dark);optic.position.set(0,.265,-.35);root.add(optic);root.userData.ringGeometry=optic.geometry;
-  part(geometries.sphere,M.red,0,.265,-.344,.002,.002,.002);cyl(clearOptic,0,.265,-.35,.039,.002);
-  cyl(M.metal,0,.01,-.64,.025,.17);cyl(M.dark,0,.01,-.735,.032,.05);box(M.steel,.09,.025,-.35,.012,.035,.07,bolt);
-  muzzle=-.76;sightY=.265;
+  profile([[.19,.07],[-.62,.07],[-.64,-.15],[-.48,-.29],[.13,-.29]],.17,M.polymer,root,[[[-.03,-.11],[.09,-.11],[.09,-.22],[-.04,-.22]],[[-.47,-.10],[-.32,-.10],[-.28,-.22],[-.43,-.22]]]);
+  box(M.rubber,0,-.09,.20,.18,.34,.035);box(M.dark,0,.113,-.23,.15,.06,.55,mag);box(M.glass,0,.15,-.23,.14,.025,.53,mag);
+  for(let z=-.46;z<.02;z+=.024){const round=cyl(M.brass,0,.147,z,.010,.10,mag);round.rotation.set(0,0,Math.PI/2);}
+  charging(.10,-.39);barrel(-.76,-.58);rectOptic(-.32,.28);
+ }else if(id==='barrett'){
+  // Long rectangular M82 receiver, vented barrel shroud, box magazine and bipod.
+  box(M.metal,0,.025,-.22,.15,.18,.76);box(M.dark,0,-.015,.34,.13,.16,.36);box(M.rubber,0,-.06,.54,.16,.28,.04);grip(.07);
+  box(M.dark,0,-.245,-.20,.12,.29,.24,mag);for(const x of [-.063,.063])for(let z=-.28;z<-.10;z+=.045)box(M.metal,x,-.24,z,.006,.21,.013,mag);
+  box(M.metal,0,.025,-.89,.16,.15,.57);for(let z=-.65;z>-1.14;z-=.07)for(const x of [-.083,.083])box(M.dark,x,.025,z,.004,.085,.038);
+  barrel(-1.66,-1.14,.036);box(M.steel,0,.018,-1.64,.16,.11,.16);for(const x of [-.083,.083])for(const z of [-1.60,-1.66])box(M.dark,x,.018,z,.008,.06,.03);
+  for(const side of [-1,1]){const leg=cyl(M.dark,side*.095,-.15,-.96,.016,.52);leg.rotation.x=1.24;leg.rotation.z=side*.18;}
+  charging(.09,-.12);rail(.10,-.91,.15);scope(-.41,.30);muzzle=-1.74;
  }else if(id==='pistol'){
-  box(M.polymer,0,-.035,-.04,.105,.13,.31);box(M.metal,0,.055,-.1,.12,.095,.37,bolt);box(M.dark,0,.109,-.18,.075,.009,.18,bolt);
-  const grip=box(M.polymer,0,-.17,.055,.1,.23,.13);grip.rotation.x=-.24;box(M.rubber,0,-.285,.085,.115,.025,.14,mag);
-  box(M.metal,0,-.14,-.095,.08,.02,.16);box(M.metal,0,-.09,-.17,.025,.11,.02);box(M.steel,.063,.06,-.03,.008,.038,.065,bolt);
-  cyl(M.steel,0,.04,-.28,.028,.055);cyl(M.dark,0,.04,-.31,.019,.008);box(M.dark,0,.12,-.255,.015,.025,.02,bolt);box(M.red,0,.135,-.255,.004,.008,.004,bolt);box(M.dark,0,.12,.05,.1,.022,.025,bolt);
+  box(M.polymer,0,-.035,-.04,.105,.13,.31);box(M.metal,0,.055,-.10,.12,.095,.37,bolt);grip(.06);box(M.dark,0,-.20,.06,.07,.23,.10,mag);box(M.rubber,0,-.32,.08,.11,.022,.13,mag);
+  cyl(M.steel,0,.04,-.29,.027,.055);muzzle=-.32;rectOptic(.005,.205);
   for(const x of [-.061,.061])for(let z=-.025;z<.07;z+=.015)box(M.dark,x,.06,z,.003,.065,.005,bolt);
-  muzzle=-.32;sightY=.13;
- }else{
-  const smg=id==='mp5',sniper=id==='awp',shotgun=id==='shotgun',ak=id==='ak47',garand=id==='garand',furniture=ak||garand?woodMaterial:sniper?M.polymer:M.tan;muzzle=sniper?-1.48:garand?-1.4:shotgun?-1.32:smg?-.87:-1.18;
-  box(M.metal,0,.012,-.18,.125,.17,.47);box(M.polymer,0,-.07,-.1,.12,.07,.4);box(M.dark,0,.108,-.27,.115,.025,.6);
-  // Buffer tube, cheek rest, buttpad, angled pistol grip.
-  cyl(M.metal,0,.005,.24,.035,.34);box(smg?M.polymer:furniture,0,.028,.34,.12,.105,.28);box(smg?M.polymer:furniture,0,-.085,.40,.10,.045,.15);box(M.rubber,0,-.02,.49,.135,.23,.04);
-  if(ak||garand)box(furniture,0,-.065,.26,.13,.12,.36);
-  const grip=box(ak?woodMaterial:M.polymer,0,-.19,.008,.095,.22,.11);grip.rotation.x=-.28;if(garand){grip.visible=false;box(woodMaterial,0,-.09,-.08,.14,.10,.65);}
-  box(M.metal,0,-.16,-.13,.08,.018,.15);box(M.metal,0,-.11,-.205,.025,.12,.02);
-  // Magazine, chamber and bolt cover are independently animated.
-  const magZ=smg?-.26:-.22;const magazine=box(M.dark,0,-.22,magZ,smg?.065:.095,smg?.32:.27,.14,mag);magazine.rotation.x=smg?-.08:.16;
-  if(ak){magazine.scale.y=.17;magazine.position.y=-.17;for(let i=0;i<4;i++){const seg=box(M.dark,0,-.23-i*.045,magZ+.02+i*.024,.095,.06,.15,mag);seg.rotation.x=.18+i*.1;}}
-  for(let i=0;i<3;i++)box(M.polymer,0,-.15-i*.065,magZ+.068,.1,.015,.008,mag);
-  box(M.steel,.065,.025,-.12,.006,.065,.14,bolt);box(M.dark,.075,.017,-.07,.018,.04,.035,bolt);box(M.metal,-.075,.025,-.06,.02,.027,.045);
-  // Free-float handguard, Picatinny rails, barrel and slotted muzzle brake.
-  const fore=smg?.25:sniper?.53:garand?.63:.42,foreCenter=-.41-fore*.5;
-  box(smg?M.polymer:furniture,0,.005,foreCenter,.12,.14,fore);cyl(M.metal,0,.013,(muzzle-.4)*.5,.026,Math.abs(muzzle+.4));
-  for(let z=-.42;z>foreCenter-fore/2;z-=.047){box(M.dark,.062,.02,z,.006,.045,.022);box(M.dark,-.062,.02,z,.006,.045,.022);}
-  if(!ak&&!garand)for(let z=.01;z>foreCenter-fore/2;z-=.04)box(M.metal,0,.125,z,.13,.015,.014);
-  if(smg){cyl(M.dark,0,.02,-.27,.064,.45);box(M.metal,-.09,.08,-.40,.05,.025,.03);}
-  if(garand){mag.visible=false;box(M.dark,0,.10,-.21,.06,.025,.16,bolt);}
-  cyl(M.metal,0,.013,muzzle+.045,.039,.10);cyl(M.dark,0,.013,muzzle-.007,.023,.008);for(const x of [-.04,.04])box(M.dark,x,.014,muzzle+.035,.004,.035,.05);
-  if(shotgun){cyl(M.dark,0,-.065,-.78,.031,.78);for(let z=-.6;z>-.92;z-=.03)box(M.rubber,0,-.055,z,.15,.12,.015);for(let z=.05;z>-.18;z-=.055)cyl(M.brass,.083,.01,z,.018,.045);}
-  // Optics: an open red-dot sight for carbines, tubular scope for marksman.
-  if(sniper){
-   for(const z of [-.25,-.55]){box(M.dark,0,.18,z,.1,.1,.08);cyl(M.dark,0,.24,z,.066,.04);}
-   cyl(M.metal,0,.25,-.41,.055,.46);cyl(M.dark,0,.25,-.68,.086,.12);cyl(M.glass,0,.25,-.745,.071,.006);cyl(M.dark,0,.25,-.145,.071,.10);cyl(M.glass,0,.25,-.09,.058,.006);box(M.dark,.075,.25,-.38,.06,.08,.07);box(M.dark,0,.32,-.38,.07,.045,.07);sightY=.25;
-  }else if(ak||garand){
-   box(M.dark,-.029,.156,-.10,.018,.025,.027);box(M.dark,.029,.156,-.10,.018,.025,.027);box(M.dark,0,.13,-.10,.07,.015,.027);
-   box(M.dark,0,.145,muzzle+.18,.012,.055,.025);box(M.steel,0,.173,muzzle+.18,.009,.008,.012);sightY=.173;
-   const frontRing=new T.Mesh(new T.TorusGeometry(.036,.006,6,14),M.dark);frontRing.position.set(0,.159,muzzle+.19);root.add(frontRing);root.userData.ringGeometry=frontRing.geometry;
-  }else{
-   box(M.dark,0,.15,-.24,.1,.05,.16);const ring=new T.Mesh(new T.TorusGeometry(.058,.011,6,18),M.dark);ring.position.set(0,.218,-.25);root.add(ring);root.userData.ringGeometry=ring.geometry;
-   const glass=part(geometries.cyl,clearOptic,0,.218,-.25,.049,.003,.049);glass.rotation.x=Math.PI/2;
-   const reticle=part(geometries.sphere,M.red,0,.218,-.245,.002,.002,.002);reticle.renderOrder=10;sightY=.218;
-   box(M.dark,.074,.18,-.24,.04,.05,.05);
-  }
-  // Receiver pins and embossed side accents.
-  for(const z of [-.31,-.03]){const pin=part(geometries.cyl,M.steel,.068,-.026,z,.008,.007,.008);pin.rotation.z=Math.PI/2;}
-  box(M.steel,-.064,.035,-.18,.003,.022,.07);box(M.dark,-.07,-.02,-.03,.01,.01,.06);
  }
  let supportArm=null;
  if(hands){
-  const right=box(M.glove,.035,-.22,id==='pistol'?.07:.02,.12,.13,.13);right.rotation.x=-.2;
-  const forearm=box(M.sleeve,.11,-.39,.22,.15,.35,.17);forearm.rotation.x=-.45;forearm.rotation.z=.28;
-  const left=box(M.glove,-.02,-.105,id==='pistol'?-.13:id==='knife'?.15:id==='p90'?-.43:-.62,.135,.12,.17);left.rotation.z=.18;
-  const forearm2=box(M.sleeve,-.12,-.3,id==='pistol'?-.04:id==='knife'?.28:id==='p90'?-.25:-.43,.15,.37,.17);forearm2.rotation.z=-.35;forearm2.rotation.x=-.7;
-  supportArm=new T.Group();root.add(supportArm);supportArm.add(left,forearm2);
-  for(let i=0;i<4;i++)box(M.rubber,.095,-.23+i*.018,.015,.012,.012,.07);
+  const gripZ=id==='vcr2'?-.27:id==='pistol'?.07:.02;
+  box(M.glove,.035,-.22,gripZ,.12,.13,.13).rotation.x=-.2;const right=box(M.sleeve,.11,-.39,gripZ+.20,.15,.35,.17);right.rotation.x=-.45;right.rotation.z=.28;
+  supportArm=new T.Group();root.add(supportArm);const z=id==='pistol'?-.10:id==='knife'?.15:id==='p90'?-.43:-.62;
+  const left=box(M.glove,-.02,-.105,z,.135,.12,.17,supportArm);left.rotation.z=.18;const fore=box(M.sleeve,-.12,-.30,z+.18,.15,.37,.17,supportArm);fore.rotation.z=-.35;fore.rotation.x=-.7;
+  root.userData.supportZ=z;
  }
- const flashMat=new T.MeshBasicMaterial({color:0xffd58a,transparent:true,opacity:.95,depthWrite:false,side:T.DoubleSide});const flashGeo=new T.ConeGeometry(.075,.23,6),flash=new T.Mesh(flashGeo,flashMat);flash.rotation.x=-Math.PI/2;flash.position.set(0,id==='pistol'?.04:.013,muzzle-.13);flash.visible=false;root.add(flash);
- const light=new T.PointLight(0xffb85c,0,3,2);light.position.copy(flash.position);root.add(light);
- root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
- root.userData={...root.userData,muzzle,sightY,mag,bolt,flash,light,supportArm,dispose(){flashGeo.dispose();flashMat.dispose();root.userData.extraGeometry?.dispose();root.userData.ringGeometry?.dispose();}};
- return root;
+ // Three distinct magazine instances: seated, removed and fresh replacement.
+ const oldMag=mag.clone(true),newMag=mag.clone(true);root.add(oldMag,newMag);oldMag.visible=newMag.visible=false;
+ const flashMat=new T.MeshBasicMaterial({color:0xffd58a,transparent:true,opacity:.95,depthWrite:false,side:T.DoubleSide}),flashGeo=new T.ConeGeometry(.075,.23,6),flash=new T.Mesh(flashGeo,flashMat);flash.rotation.x=-Math.PI/2;flash.position.set(0,id==='pistol'?.04:.018,muzzle-.13);flash.visible=false;root.add(flash);
+ const light=new T.PointLight(0xffb85c,0,3,2);light.position.copy(flash.position);root.add(light);root.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true;});
+ root.userData={...root.userData,muzzle,sightY,mag,oldMag,newMag,bolt,flash,light,supportArm,dispose(){flashGeo.dispose();flashMat.dispose();for(const r of owned)r.dispose();}};return root;
 }
 export function createSoldier(index=0,friendly=false){
  const group=new T.Group(),limbs=[];

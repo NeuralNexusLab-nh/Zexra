@@ -4,20 +4,25 @@ A fully static browser arena shooter by NXLabTW. English interface, technology-p
 
 ## Play
 
-Open https://neuralnexuslab-nh.github.io/Zexra/ and select **PLAY**. Choose the match size at the top and the game mode below it, then deploy.
+Open https://neuralnexuslab-nh.github.io/Zexra/ and select **PLAY**. Choose an independent elimination mode (1v1 to 5v5), Team Deathmatch, Free for All or a special operation, then deploy.
 
-- **Team Deathmatch:** 1v1 through 5v5. You play with AI teammates against an equally sized AI team. First team to 50 eliminations, or the highest team score after five minutes, wins. Friendly fire is disabled. Friendly markers identify your teammates.
-- **Free for All:** the size selector corresponds to 2, 4, 6, 8 or 10 individual combatants. Everyone fights independently. First to 25 eliminations, or the highest score at the time limit, wins.
+- **1v1, 2v2, 3v3, 4v4, 5v5:** independent round-elimination modes. One life per round, no mid-round respawns, first team to five rounds. A round lasts up to 90 seconds; timeout compares surviving players, then remaining health. A tie replays without a point.
+- **Team Deathmatch:** separate 5v5 respawn mode. First team to 50 eliminations, or highest team score after five minutes. Friendly fire is disabled.
+- **Free for All:** separate ten-player respawn mode. First to 25 eliminations, or highest score after five minutes.
 - **Dead Signal:** solo zombie survival in **The Hollow**, a separate abandoned cemetery with memorial ruins, fog, moonlight and violet security lights. Waves progressively increase in number, health and movement speed. Infected pursue through cover and attack at melee range after a dodgeable wind-up. Survive an entire wave to restore reserve ammunition, recover health and gain a grenade before the next wave. Death ends the run. Active infected are capped at 18 to bound rendering and navigation costs.
-- **Free Range:** six moving targets, unlimited reserve ammunition and grenade replenishment.
+- **Shooting Range:** six moving targets, unlimited reserve ammunition and grenade replenishment.
+
+**Arena selection:** Drydock, Nightshift, Overpass, Substation and Quarry are available in every arena mode, including Shooting Range. Only Dead Signal locks its map to The Hollow. The three added arenas use different obstacle layouts and routes, not just lighting changes.
+
+Regular bots react after 1.3 seconds of continuous sight, fire short three-shot bursts with breathing room, deal reduced damage and aim for the torso with wider error. Recruit is easier; Elite retains a faster response.
 
 All participants other than you are local AI. There is no online multiplayer or matchmaking service.
 
 ## Arsenal
 
-Six freely available primary weapons: **AK-47, VCR2, MP5, AWP, M1 Garand and P90**. Every loadout also includes a P-19 sidearm, tactical knife and two grenades.
+Seven freely available primary weapons: **AK-47, VCR-2, MP5, AWP, M1 Garand, P90 and Barrett M82A1**. Every loadout also includes a P-19 sidearm, tactical knife and two grenades.
 
-The P90 uses a distinct compact bullpup model, a top-mounted 50-round magazine, its own fire rate, recoil and upward magazine-removal animation. The AWP has a clear magnified optic and a bolt-action cycle; the M1 Garand uses an eight-round clip and an empty-clip ping. VCR2 is fictional. Weapon names identify game interpretations, not manufacturer-approved simulations.
+The P90 uses a distinct compact bullpup model, a top-mounted 50-round magazine, its own fire rate, recoil and upward magazine exchange. Every magazine-fed weapon has separate seated, removed and fresh magazine models, synchronized hand movement, insertion and charging. The M1 Garand uses a top-loaded en-bloc clip. Non-magnified optics use a wide rectangular window and central red dot; AWP and Barrett use magnified scopes. The AWP has a clear magnified optic and a bolt-action cycle; the M1 Garand uses an eight-round clip and an empty-clip ping. The VCR-2 silhouette follows the BF6 bullpup layout. Weapon names identify game interpretations, not manufacturer-approved simulations.
 
 ## Controls
 

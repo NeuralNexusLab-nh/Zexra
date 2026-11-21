@@ -1,4 +1,4 @@
-import {visible} from './physics.js?asset=92beea4cf702';
+import {visible} from './physics.js?asset=300d47b839c0';
 const T=window.THREE;
 let seed=517;
 const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
@@ -44,10 +44,43 @@ export function createWorld(renderer,theme='dock'){
  box(0,-.3,0,64,.6,64,asphalt);
  box(-28,3,0,1,6,57,darkConcrete);box(28,3,0,1,6,57,darkConcrete);box(0,3,-28,57,6,1,concrete);box(0,3,28,57,6,1,concrete);
  for(let x=-24;x<28;x+=8){box(x,5.5,-27.43,.2,1,.18,steel,false);box(x,5.5,27.43,.2,1,.18,steel,false);}
+ if(theme==='overpass'){
+  // A traversable elevated road with ground-level flanking lanes and six pillars.
+  box(0,3.85,0,44,.30,8,asphalt);for(const x of [-16,0,16])for(const z of [-3,3])box(x,1.85,z,1.1,3.7,1.1,concrete);
+  for(const z of [-4.05,4.05]){box(0,4.25,z,44,.5,.20,concrete);for(let x=-20;x<=20;x+=5)box(x,4.59,z,.3,.05,.21,yellow,false);}
+  stairs(-7,-12,0,.5,16);stairs(7,12,0,-.5,16);
+  for(let x=-18;x<20;x+=6)box(x,4.015,0,2,.018,.12,white,false);
+  container(-13,-15,blue);container(13,15,green);barrier(-9,12,6);barrier(9,-12,6);crate(-20,10);crate(20,-10);crate(-5,-17);crate(5,17);
+  for(const z of [-18,18]){box(0,1.3,z,5,2.6,3,steel);box(0,2.65,z,5.3,.1,3.3,silver,false);}
+ }else if(theme==='substation'){
+  // Transformer islands and overhead busbars leave three asymmetric routes.
+  for(const x of [-14,0,14])for(const z of [-10,10]){
+   box(x,.24,z,5.7,.48,5,concrete);box(x,1.45,z,3.5,2.0,2.7,green);
+   for(const side of [-1,1])for(let a=-1.1;a<1.2;a+=.3)box(x+side*1.85,1.4,z+a,.22,1.65,.11,steel,false);
+   for(const dx of [-1,1]){cylinder(x+dx,2.75,z,.18,.6,silver);for(let y=2.5;y<3.1;y+=.12)cylinder(x+dx,y,z,.27,.05,black);}
+   box(x,3.25,z,3.2,.12,.12,silver,false);
+  }
+  for(const x of [-21,21]){box(x,3.0,0,.22,6,.22,steel);box(x,6,0,.3,.2,40,steel,false);}
+  for(const z of [-18,0,18])box(0,6,z,42,.16,.16,steel,false);
+  for(const [x,z] of [[-7,-2],[7,2],[-21,-17],[21,17]]){box(x,.9,z,2,1.8,1.2,blue);label('DANGER / HIGH VOLTAGE',x,1.3,z+.61,1.7,.4);}
+  barrier(-8,19,4);barrier(8,-19,4);crate(-23,7);crate(23,-7);
+ }else if(theme==='quarry'){
+  // Terraced stone cuts, loaded mining carts and a timber processing lane.
+  for(const side of [-1,1]){
+   for(let i=0;i<4;i++){const x=side*(20-i*.8),z=-17+i*11;box(x,1.4,z,5,2.8,6,darkConcrete);box(x-side*.5,3.15,z,4,.7,5,concrete);}
+   box(side*11,.65,side*8,6,1.3,3,rust);box(side*11,1.7,side*8,4,1.0,2.2,concrete);
+   for(const x of [-.8,.8])cylinder(side*11+x,.3,side*8, .25,.5,black,true);
+  }
+  for(const [x,z] of [[-9,-12],[9,12],[-5,5],[5,-5]]){box(x,.85,z,3,1.7,2.5,darkConcrete);box(x+.35,1.95,z,2,.5,1.7,concrete);}
+  for(let i=0;i<5;i++){cylinder(-9+i*.7,.5,18,.30,6,rust,true);cylinder(9-i*.7,.5,-18,.30,6,rust,true);}
+  box(0,3.125,0,7,.25,5,steel);stairs(-9.75,0,.5,0,12);stairs(9.75,0,-.5,0,12);
+  for(const x of [-3,3])for(const z of [-2,2])box(x,1.6,z,.2,3.2,.2,steel);
+  label('QUARRY / EXTRACTION ZONE',0,2.2,-27.4,12,1);
+ }else{
  container(-10,-8,blue);container(10,8,rust);container(-19,10,green,0,true);container(19,-10,blue,0,true);
  // Raised central service deck with stair access at both ends.
  box(0,2.85,0,8,.3,5,steel);for(const x of [-3.7,3.7])for(const z of [-2.2,2.2])box(x,1.4,z,.25,2.8,.25,steel);
- stairs(-7.75,0,.5,0);stairs(7.75,0,-.5,0);
+ stairs(-9.75,0,.5,0);stairs(9.75,0,-.5,0);
  for(const z of [-2.48,2.48]){box(0,3.75,z,8,.1,.1,yellow,false);for(const x of [-3.8,-1.3,1.3,3.8])box(x,3.4,z,.06,.8,.06,yellow,false);}
  // An upper container roof can be reached via small steps / crates.
  crate(-14,-4);box(-16, .3,-4,1.6,.6,1.8,darkConcrete);box(-14.1,1.95,-5.5,1.4,1.3,1.4,green);
@@ -59,6 +92,7 @@ export function createWorld(renderer,theme='dock'){
   cylinder(x,.6,z,.42,1.2,rust);cylinder(x+.95,.6,z,.42,1.2,steel);box(x,.6,z,.84,1.2,.84,rust,true);
   cylinder(x,.9,z,.43,.08,yellow);cylinder(x,.3,z,.43,.08,black);
  }
+ }
  // Warehouse facades, service doors, ductwork and concrete joints.
  for(const side of [-1,1]){
   box(side*34,7,0,11,14,50,darkConcrete,false);box(side*28.4,6.2,0,.3,.35,53,steel,false);
@@ -66,7 +100,7 @@ export function createWorld(renderer,theme='dock'){
   for(let z=-22;z<24;z+=4)box(side*28.45,9,z,.12,2.5,2.2,blue,false);
  }
  for(let x=-24;x<28;x+=8){box(x,8,-33,7.8,16,8,darkConcrete,false);box(x,8,33,7.8,16,8,concrete,false);for(const z of [-28.95,28.95])box(x,8,z,5,1.8,.08,steel,false);}
- label('DRYDOCK',0,4.4,-27.42,8,1.1,0,'#263b42','#d6e7be');label('NX INDUSTRIAL / SECTOR 07',0,3.9,27.42,9,.8,Math.PI,'#263b42','#d6e7be');
+ label(({dock:'DRYDOCK',night:'NIGHTSHIFT',overpass:'OVERPASS',substation:'SUBSTATION',quarry:'QUARRY'})[theme],0,4.4,-27.42,8,1.1,0,'#263b42','#d6e7be');label('NX INDUSTRIAL / SECTOR 07',0,3.9,27.42,9,.8,Math.PI,'#263b42','#d6e7be');
  label('A',-26.9,2,-7,1.2,1.6,Math.PI/2,'#bba546','#1b292b');label('B',26.9,2,7,1.2,1.6,-Math.PI/2,'#ae6752','#f2e0c0');
  for(const [x,z] of [[-25,-23],[25,23],[-25,23],[25,-23],[0,-25],[0,25]])lamp(x,z);
  // Embedded road markings and drains.
@@ -81,7 +115,7 @@ export function createWorld(renderer,theme='dock'){
  const skyGeo=new T.SphereGeometry(190,32,16),skyMat=new T.ShaderMaterial({side:T.BackSide,depthWrite:false,uniforms:{top:{value:new T.Color(night?'#101c34':'#447687')},bottom:{value:new T.Color(night?'#647078':'#c9dce8')},sun:{value:new T.Vector3(-.45,.45,-.65).normalize()},night:{value:night?1:0}},vertexShader:'varying vec3 v;void main(){v=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'varying vec3 v;uniform vec3 top,bottom,sun;uniform float night;void main(){vec3 d=normalize(v);float a=clamp(d.y*.8+.12,0.,1.);vec3 c=mix(bottom,top,pow(a,.55));float s=max(dot(d,sun),0.);c+=vec3(1.,.81,.5)*pow(s,200.)*(1.-night)*1.6;c+=vec3(.4,.5,.6)*pow(s,900.)*night;gl_FragColor=vec4(c,1.);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}'});resources.push(skyGeo,skyMat);const sky=new T.Mesh(skyGeo,skyMat);scene.add(sky);
  const hemi=new T.HemisphereLight(night?0xa1b8e0:0xc6e6f1,night?0x27342d:0x5b6350,night?1.15:2.2);scene.add(hemi);
  const sun=new T.DirectionalLight(night?0x9ab6e8:0xe8f2ff,night?.75:3.2);sun.position.set(-25,38,-22);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-36;sun.shadow.camera.right=36;sun.shadow.camera.top=36;sun.shadow.camera.bottom=-36;sun.shadow.camera.near=1;sun.shadow.camera.far=110;sun.shadow.bias=-.00025;sun.shadow.normalBias=.025;sun.shadow.radius=2;scene.add(sun);scene.add(sun.target);
- const envScene=new T.Scene();envScene.background=new T.Color(night?0x4e626f:0xa6b9bf);const envLight=new T.Mesh(new T.PlaneGeometry(40,40),new T.MeshBasicMaterial({color:night?0x8ca0af:0xffecd1}));envLight.position.set(-20,25,-20);envLight.lookAt(0,0,0);envScene.add(envLight);const pmrem=new T.PMREMGenerator(renderer),env=pmrem.fromScene(envScene,0);scene.environment=env.texture;pmrem.dispose();envLight.geometry.dispose();envLight.material.dispose();resources.push(env);
+ const envScene=new T.Scene();envScene.background=new T.Color(night?0x4e626f:0xa6b9bf);const envLight=new T.Mesh(new T.PlaneGeometry(40,40),new T.MeshBasicMaterial({color:night?0x8ca0af:0xffecd1}));envLight.position.set(-20,25,-20);envLight.lookAt(0,0,0);envScene.add(envLight);if(renderer){const pmrem=new T.PMREMGenerator(renderer),env=pmrem.fromScene(envScene,0);scene.environment=env.texture;pmrem.dispose();resources.push(env);}envLight.geometry.dispose();envLight.material.dispose();
  for(const [m,matrices] of batches){const inst=new T.InstancedMesh(unitBox,m,matrices.length);matrices.forEach((matrix,i)=>inst.setMatrixAt(i,matrix));inst.castShadow=true;inst.receiveShadow=true;inst.instanceMatrix.needsUpdate=true;inst.computeBoundingSphere();scene.add(inst);}
  // Grid navigation is built from the same collision boxes as player movement.
  const nav=[],grid=new Map(),spacing=2;

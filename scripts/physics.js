@@ -46,11 +46,12 @@ export function accelerate(p,dx,dz,speed,dt,air=false){const len=Math.hypot(dx,d
 export function damageAt(base,distance,range,head=false){return Math.round(base*(head?2:1)*Math.max(.45,1-Math.max(0,distance-range)/(range*3)));}
 export const WEAPONS=[
  {id:'ak47',name:'AK-47',type:'ASSAULT RIFLE',caliber:'7.62 × 39',mag:30,reserve:180,damage:33,interval:.10,reload:2.35,spread:.014,recoil:.021,range:30,auto:true,pellets:1,zoom:60},
- {id:'vcr2',name:'VCR2',type:'ASSAULT RIFLE',caliber:'5.56 × 45',mag:30,reserve:180,damage:27,interval:.08,reload:2.1,spread:.011,recoil:.013,range:35,auto:true,pellets:1,zoom:58},
+ {id:'vcr2',name:'VCR-2',type:'ASSAULT RIFLE',caliber:'5.56 × 45',mag:30,reserve:180,damage:27,interval:.08,reload:2.1,spread:.011,recoil:.013,range:35,auto:true,pellets:1,zoom:58},
  {id:'mp5',name:'MP5',type:'SUBMACHINE GUN',caliber:'9 × 19',mag:30,reserve:180,damage:22,interval:.075,reload:1.85,spread:.015,recoil:.009,range:16,auto:true,pellets:1,zoom:64},
  {id:'awp',name:'AWP',type:'BOLT-ACTION RIFLE',caliber:'7.62 × 51',mag:10,reserve:50,damage:100,interval:1.35,reload:2.9,spread:.023,recoil:.045,range:70,auto:false,pellets:1,zoom:25},
  {id:'garand',name:'M1 Garand',type:'SEMI-AUTOMATIC RIFLE',caliber:'.30-06 SPRINGFIELD',mag:8,reserve:64,damage:52,interval:.28,reload:2.4,spread:.015,recoil:.028,range:50,auto:false,pellets:1,zoom:50},
  {id:'p90',name:'P90',type:'PERSONAL DEFENSE WEAPON',caliber:'5.7 × 28',mag:50,reserve:250,damage:23,interval:.0667,reload:2.25,spread:.014,recoil:.0085,range:21,auto:true,pellets:1,zoom:60},
+ {id:'barrett',name:'Barrett M82A1',type:'SEMI-AUTOMATIC ANTI-MATERIEL RIFLE',caliber:'.50 BMG',mag:10,reserve:40,damage:125,interval:.65,reload:3.45,spread:.027,recoil:.075,range:95,auto:false,pellets:1,zoom:21},
  {id:'pistol',name:'P-19',type:'SIDEARM',caliber:'9 × 19',mag:17,reserve:85,damage:30,interval:.20,reload:1.45,spread:.016,recoil:.023,range:18,auto:false,pellets:1,zoom:64}
 ];
-export const PRIMARY_COUNT=6,SIDEARM_INDEX=6;
+export const PRIMARY_COUNT=7,SIDEARM_INDEX=7;
