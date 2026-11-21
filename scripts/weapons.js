@@ -4,6 +4,7 @@ const bevelShape=new T.Shape();bevelShape.moveTo(-.465,-.465);bevelShape.lineTo(
 const bevelBox=new T.ExtrudeGeometry(bevelShape,{depth:.93,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.035,bevelThickness:.035});bevelBox.translate(0,0,-.465);
 const geometries={box:bevelBox,cyl:new T.CylinderGeometry(1,1,1,16),sphere:new T.SphereGeometry(1,12,8)};
 const limbGeometry=new T.CapsuleGeometry(.5,1,3,8);
+const clearOptic=new T.MeshBasicMaterial({color:0xa4e7ff,transparent:true,opacity:.055,depthWrite:false,side:T.DoubleSide});
 export function createWeapon(id='carbine',hands=true){
  const root=new T.Group();root.userData.id=id;
  const part=(geo,m,x,y,z,w,h,d,parent=root)=>{const mesh=new T.Mesh(geo,m);mesh.position.set(x,y,z);mesh.scale.set(w,h,d);parent.add(mesh);return mesh;};
@@ -47,7 +48,7 @@ export function createWeapon(id='carbine',hands=true){
    cyl(M.metal,0,.25,-.41,.055,.46);cyl(M.dark,0,.25,-.68,.086,.12);cyl(M.glass,0,.25,-.745,.071,.006);cyl(M.dark,0,.25,-.145,.071,.10);cyl(M.glass,0,.25,-.09,.058,.006);box(M.dark,.075,.25,-.38,.06,.08,.07);box(M.dark,0,.32,-.38,.07,.045,.07);sightY=.25;
   }else{
    box(M.dark,0,.15,-.24,.1,.05,.16);const ring=new T.Mesh(new T.TorusGeometry(.058,.011,6,18),M.dark);ring.position.set(0,.218,-.25);root.add(ring);root.userData.ringGeometry=ring.geometry;
-   const glass=part(geometries.cyl,M.glass,0,.218,-.25,.049,.003,.049);glass.rotation.x=Math.PI/2;
+   const glass=part(geometries.cyl,clearOptic,0,.218,-.25,.049,.003,.049);glass.rotation.x=Math.PI/2;
    const reticle=part(geometries.sphere,M.red,0,.218,-.245,.002,.002,.002);reticle.renderOrder=10;sightY=.218;
    box(M.dark,.074,.18,-.24,.04,.05,.05);
   }
@@ -55,17 +56,19 @@ export function createWeapon(id='carbine',hands=true){
   for(const z of [-.31,-.03]){const pin=part(geometries.cyl,M.steel,.068,-.026,z,.008,.007,.008);pin.rotation.z=Math.PI/2;}
   box(M.steel,-.064,.035,-.18,.003,.022,.07);box(M.dark,-.07,-.02,-.03,.01,.01,.06);
  }
+ let supportArm=null;
  if(hands){
   const right=box(M.glove,.035,-.22,id==='pistol'?.07:.02,.12,.13,.13);right.rotation.x=-.2;
   const forearm=box(M.sleeve,.11,-.39,.22,.15,.35,.17);forearm.rotation.x=-.45;forearm.rotation.z=.28;
   const left=box(M.glove,-.02,-.105,id==='pistol'?-.13:id==='knife'?.15:-.62,.135,.12,.17);left.rotation.z=.18;
   const forearm2=box(M.sleeve,-.12,-.3,id==='pistol'?-.04:id==='knife'?.28:-.43,.15,.37,.17);forearm2.rotation.z=-.35;forearm2.rotation.x=-.7;
+  supportArm=new T.Group();root.add(supportArm);supportArm.add(left,forearm2);
   for(let i=0;i<4;i++)box(M.rubber,.095,-.23+i*.018,.015,.012,.012,.07);
  }
  const flashMat=new T.MeshBasicMaterial({color:0xffd58a,transparent:true,opacity:.95,depthWrite:false,side:T.DoubleSide});const flashGeo=new T.ConeGeometry(.075,.23,6),flash=new T.Mesh(flashGeo,flashMat);flash.rotation.x=-Math.PI/2;flash.position.set(0,id==='pistol'?.04:.013,muzzle-.13);flash.visible=false;root.add(flash);
  const light=new T.PointLight(0xffb85c,0,3,2);light.position.copy(flash.position);root.add(light);
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
- root.userData={...root.userData,muzzle,sightY,mag,bolt,flash,light,dispose(){flashGeo.dispose();flashMat.dispose();root.userData.extraGeometry?.dispose();root.userData.ringGeometry?.dispose();}};
+ root.userData={...root.userData,muzzle,sightY,mag,bolt,flash,light,supportArm,dispose(){flashGeo.dispose();flashMat.dispose();root.userData.extraGeometry?.dispose();root.userData.ringGeometry?.dispose();}};
  return root;
 }
 export function createSoldier(index=0){
