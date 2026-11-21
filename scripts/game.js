@@ -1,6 +1,6 @@
 import {clamp,damp,makeBody,moveBody,accelerate,canStand,wallDistance,visible,rayBox,raySphere,damageAt,lookVector,movementVector,PRIMARY_COUNT,SIDEARM_INDEX,WEAPONS} from './physics.js?asset=e07dc08633f9';
 import {createWorld,findPath} from './world.js?asset=4985951fc3c7';
-import {createWeapon,createSoldier} from './weapons.js?asset=a54a730a1205';
+import {createWeapon,createSoldier} from './weapons.js?asset=e6b8759fe889';
 import {SoundEngine} from './audio.js?asset=6413df84f0d5';
 const T=window.THREE,$=id=>document.getElementById(id),canvas=$('game');
 const defaults={sens:1,adsSens:.65,touchSens:.9,invertY:false,fov:90,volume:65,quality:'medium',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,numbers:true,showFps:true,primary:0};
@@ -25,7 +25,7 @@ function saveSettings(){try{localStorage.setItem('zexra.settings.v1',JSON.string
 function fail(e){console.error(e);$('boot').hidden=true;$('fatal').hidden=false;$('fatalText').textContent='Renderer startup failed: '+e.message+'. Please enable WebGL and hardware acceleration.';}
 function setup(){
  try{
-  renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance',alpha:false});renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.autoClear=false;renderer.info.autoReset=false;
+  renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance',alpha:false});renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.autoClear=false;renderer.info.autoReset=false;
   camera=new T.PerspectiveCamera(settings.fov,innerWidth/innerHeight,.06,220);camera.rotation.order='YXZ';
   viewScene=new T.Scene();viewCamera=new T.PerspectiveCamera(65,innerWidth/innerHeight,.01,12);viewScene.add(new T.HemisphereLight(0xc6e2ed,0x5b6350,2.4));const keyLight=new T.DirectionalLight(0xffe5b9,3.5);keyLight.position.set(-2,3,1);viewScene.add(keyLight);viewScene.add(flashLight);
   loadWorld(map);equip(0);applyQuality();resize();initUI();initialized=true;$('boot').hidden=true;$('menu').hidden=false;requestAnimationFrame(frame);
@@ -33,9 +33,9 @@ function setup(){
 }
 function loadWorld(theme){
  clearEffects();for(const b of bots){world?.scene.remove(b.model.group);b.model.dispose();}bots=[];
- world?.dispose();world=createWorld(renderer,theme);viewScene.environment=world.scene.environment;renderer.toneMappingExposure=world.night?1.1:1.02;
+ world?.dispose();world=createWorld(renderer,theme);renderer.shadowMap.needsUpdate=true;viewScene.environment=world.scene.environment;renderer.toneMappingExposure=world.night?1.1:1.02;
 }
-function applyQuality(){if(!renderer)return;const q=settings.quality;renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.3:q==='medium'?1:.75));renderer.shadowMap.enabled=q!=='low';world.sun.shadow.mapSize.set(q==='high'?2048:1024,q==='high'?2048:1024);world.sun.shadow.map?.dispose();world.sun.shadow.map=null;world.sun.shadow.needsUpdate=true;resize();}
+function applyQuality(){if(!renderer)return;const q=settings.quality;renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.3:q==='medium'?1:.75));renderer.shadowMap.enabled=q!=='low';world.sun.shadow.mapSize.set(q==='high'?2048:1024,q==='high'?2048:1024);world.sun.shadow.map?.dispose();world.sun.shadow.map=null;world.sun.shadow.needsUpdate=true;renderer.shadowMap.needsUpdate=true;resize();}
 function resize(){if(!renderer)return;renderer.setSize(innerWidth,innerHeight,false);camera.aspect=viewCamera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();viewCamera.updateProjectionMatrix();}
 function gunConfig(){return selectedSlot===2?{id:'knife',name:'TACTICAL KNIFE',damage:65,interval:.55,reload:0,mag:0,spread:0,recoil:0,range:2.4,pellets:1,zoom:settings.fov}:WEAPONS[selectedSlot===0?primary:SIDEARM_INDEX];}
 function equip(slot,force=false){

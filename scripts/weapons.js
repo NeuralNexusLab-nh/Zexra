@@ -7,6 +7,7 @@ const limbGeometry=new T.CapsuleGeometry(.5,1,3,8);
 const clearOptic=new T.MeshBasicMaterial({color:0xa4e7ff,transparent:true,opacity:.055,depthWrite:false,side:T.DoubleSide});
 const woodMaterial=new T.MeshStandardMaterial({color:0x6d3c20,roughness:.66,metalness:0});
 const soldierMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.86,metalness:.08});
+const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=64;const shadowContext=shadowCanvas.getContext('2d'),shadowGradient=shadowContext.createRadialGradient(32,32,3,32,32,31);shadowGradient.addColorStop(0,'rgba(0,0,0,.65)');shadowGradient.addColorStop(1,'rgba(0,0,0,0)');shadowContext.fillStyle=shadowGradient;shadowContext.fillRect(0,0,64,64);const contactShadowMaterial=new T.MeshBasicMaterial({map:new T.CanvasTexture(shadowCanvas),transparent:true,depthWrite:false,opacity:.6});const contactShadowGeometry=new T.PlaneGeometry(1,.7);
 function mergeSoldierParts(group,exclude){
  const positions=[],normals=[],colors=[];
  for(const mesh of [...group.children]){if(!mesh.isMesh||mesh===exclude)continue;mesh.updateMatrix();let geo=mesh.geometry.clone().applyMatrix4(mesh.matrix);if(geo.index){const indexed=geo;geo=geo.toNonIndexed();indexed.dispose();}const p=geo.attributes.position,n=geo.attributes.normal,c=mesh.material.color;for(let i=0;i<p.count;i++){positions.push(p.getX(i),p.getY(i),p.getZ(i));normals.push(n.getX(i),n.getY(i),n.getZ(i));colors.push(c.r,c.g,c.b);}geo.dispose();group.remove(mesh);}
@@ -99,5 +100,7 @@ export function createSoldier(index=0){
  const patch=limb(-.255,1.33,-.01,.015,.11,.13,materials.tan);
  const flash=new T.Mesh(new T.SphereGeometry(.12,6,4),new T.MeshBasicMaterial({color:0xffd477}));flash.position.set(0,1.26,-1.03);flash.scale.z=2;flash.visible=false;group.add(flash);
  const mergedGeometry=mergeSoldierParts(group,flash);
+ group.traverse(o=>{if(o.isMesh)o.castShadow=false;});
+ const shadow=new T.Mesh(contactShadowGeometry,contactShadowMaterial);shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;group.add(shadow);
  return{group,limbs,head,flash,dispose(){cloth.dispose();head.geometry.dispose();flash.geometry.dispose();flash.material.dispose();mergedGeometry.dispose();}};
 }
