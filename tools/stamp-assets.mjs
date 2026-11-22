@@ -10,5 +10,6 @@ for(const name of ['physics','rules','handling','input','audio','weapons','horro
  hashes[name]=hash(text);await writeFile(path,text);
 }
 let html=await readFile(resolve(root,'index.html'),'utf8');
+html=html.replace(/href="favicon\.svg(?:\?[^\"]*)?"/,`href="favicon.svg?asset=${hash(await readFile(resolve(root,'favicon.svg')))}"`);
 for(const name of ['game','optics','operations']){const path=`styles/${name}.css`,stamp=hash(await readFile(resolve(root,path)));if(html.includes(`href="${path}`))html=html.replace(new RegExp(`href="styles/${name}\\.css(?:\\?[^\"]*)?"`),`href="${path}?asset=${stamp}"`);else html=html.replace('</head>',`<link rel="stylesheet" href="${path}?asset=${stamp}"></head>`);}
 html=html.replace(/src="scripts\/game\.js(?:\?[^\"]*)?"/,`src="scripts/game.js?asset=${hashes.game}"`);await writeFile(resolve(root,'index.html'),html);console.log('Asset fingerprints updated');
